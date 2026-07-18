@@ -1,4 +1,4 @@
-.section-container {
+.transaction-register-page {
 	width: 100%;
 	height: 100%;
 
@@ -6,7 +6,7 @@
 	flex-direction: column;
 }
 
-.form-container {
+.transaction-register-page__form-container {
 	width: 100%;
 	margin-top: 40px;
 }
@@ -19,17 +19,17 @@
 	background: transparent;
 }
 
-.form-grid {
+.transaction-form__grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 20px;
 }
 
-.form-observation {
+.transaction-form__observation {
 	margin-top: 20px;
 }
 
-.form-actions {
+.transaction-form__actions {
 	margin-top: 32px;
 
 	display: flex;
@@ -46,11 +46,11 @@
 }
 
 @media (max-width: 768px) {
-	.form-grid {
+	.transaction-form__grid {
 		grid-template-columns: 1fr;
 	}
 
-	.form-actions {
+	.transaction-form__actions {
 		flex-direction: column-reverse;
 
 		button {

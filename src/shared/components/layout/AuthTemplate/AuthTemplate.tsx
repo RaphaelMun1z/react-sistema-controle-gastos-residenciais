@@ -1,8 +1,8 @@
 import "./AuthTemplate.scss";
 
 // Assets
-import logo from "../../../assets/images/rm-logo-branco.png";
-import pagePreview from "../../../assets/images/preview.png";
+import logo from "../../../../assets/images/rm-logo-branco.png";
+import pagePreview from "../../../../assets/images/preview.png";
 
 // React Router
 import { Outlet } from "react-router";

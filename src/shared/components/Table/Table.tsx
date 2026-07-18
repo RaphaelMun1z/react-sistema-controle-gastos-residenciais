@@ -14,12 +14,21 @@ import {
 } from "@mui/material";
 
 // Interfaces
-export interface TableColumn<T> {
-	key: keyof T | string;
+interface AccessorTableColumn<T> {
+	key: keyof T;
 	label: string;
 	align?: "left" | "center" | "right";
-	render?: (row: T) => ReactNode;
+	render?: never;
 }
+
+interface RenderTableColumn<T> {
+	key: string;
+	label: string;
+	align?: "left" | "center" | "right";
+	render: (row: T) => ReactNode;
+}
+
+export type TableColumn<T> = AccessorTableColumn<T> | RenderTableColumn<T>;
 
 export interface TableAction<T> {
 	label: string;
@@ -114,6 +123,7 @@ const Table = <T,>({
 												title={action.label}
 											>
 												<IconButton
+													aria-label={action.label}
 													color={action.color}
 													onClick={() =>
 														action.onClick(row)

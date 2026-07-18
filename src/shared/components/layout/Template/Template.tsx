@@ -1,10 +1,11 @@
 import React from "react";
 import "./Template.scss";
 import { Outlet, useLocation, useNavigate } from "react-router";
-import { ROUTES } from "../../../app/routes/paths";
+import { ROUTES } from "../../../../app/routes/paths";
+import { useAuth } from "../../../../features/authentication/hooks/useAuth";
 
 // Assets
-import logo from "../../../assets/images/rm-logo-branco.png";
+import logo from "../../../../assets/images/rm-logo-branco.png";
 
 // Componentes do Material UI
 import {
@@ -49,6 +50,7 @@ const Template = () => {
 	// Hooks responsáveis pela navegação e identificação da rota atual
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { signOut, user } = useAuth();
 
 	// Identifica o item da navbar correspondente à rota atual
 	const currentNavItem = navItems.find((item) =>
@@ -68,7 +70,8 @@ const Template = () => {
 	};
 
 	// Redireciona para a página de login
-	const handleLogout = () => {
+	const handleLogout = async () => {
+		await signOut();
 		navigate(ROUTES.signIn);
 	};
 
@@ -85,10 +88,10 @@ const Template = () => {
 									bgcolor: deepOrange[500],
 								}}
 							>
-								RM
+								{user?.name.charAt(0).toUpperCase() ?? "U"}
 							</Avatar>
-							<h2>Raphael Muniz</h2>
-							<p>raphaelmunizvarela@gmail.com</p>
+							<h2>{user?.name ?? "Usuário"}</h2>
+							<p>{user?.email ?? "sessao@local"}</p>
 						</header>
 						<nav className="navbar-container">
 							<div className="links-container">

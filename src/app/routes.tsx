@@ -2,8 +2,10 @@ import { createBrowserRouter, Navigate } from "react-router";
 import { ROUTES } from "./routes/paths";
 
 // Componentes Template
-import Template from "../components/layout/Template/Template";
-import AuthTemplate from "../components/layout/AuthTemplate/AuthTemplate";
+import Template from "../shared/components/layout/Template/Template";
+import AuthTemplate from "../shared/components/layout/AuthTemplate/AuthTemplate";
+import PrivateRoute from "../features/authentication/components/PrivateRoute";
+import PublicRoute from "../features/authentication/components/PublicRoute";
 
 // Páginas/componentes - Autenticação
 import SignIn from "../features/authentication/pages/SignIn/SignIn";
@@ -25,44 +27,54 @@ import NotFoundPage from "../features/not-found/pages/NotFoundPage/NotFoundPage"
 
 export const router = createBrowserRouter([
 	{
-		element: <AuthTemplate />,
+		element: <PublicRoute />,
 		children: [
 			{
-				path: ROUTES.signIn,
-				element: <SignIn />,
-			},
-			{
-				path: ROUTES.signUp,
-				element: <SignUp />,
+				element: <AuthTemplate />,
+				children: [
+					{
+						path: ROUTES.signIn,
+						element: <SignIn />,
+					},
+					{
+						path: ROUTES.signUp,
+						element: <SignUp />,
+					},
+				],
 			},
 		],
 	},
 	{
-		element: <Template />,
+		element: <PrivateRoute />,
 		children: [
 			{
-				path: ROUTES.root,
-				element: <Navigate to={ROUTES.people} replace />,
-			},
-			{
-				path: ROUTES.people,
-				element: <PeopleConsultPage />,
-			},
-			{
-				path: ROUTES.personRegister,
-				element: <PersonRegisterPage />,
-			},
-			{
-				path: ROUTES.transactions,
-				element: <TransactionsConsultPage />,
-			},
-			{
-				path: ROUTES.transactionRegister,
-				element: <TransactionRegisterPage />,
-			},
-			{
-				path: ROUTES.summary,
-				element: <SummaryPage />,
+				element: <Template />,
+				children: [
+					{
+						path: ROUTES.root,
+						element: <Navigate to={ROUTES.people} replace />,
+					},
+					{
+						path: ROUTES.people,
+						element: <PeopleConsultPage />,
+					},
+					{
+						path: ROUTES.personRegister,
+						element: <PersonRegisterPage />,
+					},
+					{
+						path: ROUTES.transactions,
+						element: <TransactionsConsultPage />,
+					},
+					{
+						path: ROUTES.transactionRegister,
+						element: <TransactionRegisterPage />,
+					},
+					{
+						path: ROUTES.summary,
+						element: <SummaryPage />,
+					},
+				],
 			},
 		],
 	},

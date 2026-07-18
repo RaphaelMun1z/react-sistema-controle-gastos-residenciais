@@ -1,4 +1,4 @@
-.section-container {
+.person-register-page {
 	width: 100%;
 	height: 100%;
 
@@ -6,7 +6,7 @@
 	flex-direction: column;
 }
 
-.form-container {
+.person-register-page__form-container {
 	width: 100%;
 	margin-top: 40px;
 }
@@ -16,13 +16,13 @@
 	max-width: 900px;
 }
 
-.form-grid {
+.person-form__grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 20px;
 }
 
-.form-actions {
+.person-form__actions {
 	margin-top: 32px;
 
 	display: flex;
@@ -40,11 +40,11 @@
 }
 
 @media (max-width: 768px) {
-	.form-grid {
+	.person-form__grid {
 		grid-template-columns: 1fr;
 	}
 
-	.form-actions {
+	.person-form__actions {
 		flex-direction: column-reverse;
 
 		button {

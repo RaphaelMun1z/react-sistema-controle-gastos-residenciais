@@ -1,0 +1,12 @@
+export interface PersonSummary {
+	personId: number;
+	personName: string;
+	income: number;
+	expenses: number;
+}
+
+export interface SummaryFilters {
+	personId: string;
+	startDate: string;
+	endDate: string;
+}

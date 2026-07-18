@@ -2,7 +2,9 @@ import "./TransactionRegisterPage.scss";
 
 // Componentes do Material UI
 import {
+	Alert,
 	Button,
+	FormHelperText,
 	FormControl,
 	InputLabel,
 	MenuItem,
@@ -15,9 +17,18 @@ import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 
 // Componentes Locais
-import PageHeader from "../../../../components/PageHeader/PageHeader";
-import { Link } from "react-router";
+import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
+import { Link, useNavigate } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+	transactionSchema,
+	type TransactionFormData,
+} from "../../schemas/transactionSchema";
+import { useCreateTransaction } from "../../hooks/useTransactions";
+import { usePeople } from "../../../people/hooks/usePeople";
+import { useState } from "react";
 
 const TransactionsRegisterHeaderData = {
 	sector: "Transações",
@@ -27,83 +38,163 @@ const TransactionsRegisterHeaderData = {
 };
 
 const TransactionRegisterPage = () => {
+	const navigate = useNavigate();
+	const createTransaction = useCreateTransaction();
+	const { data: people = [] } = usePeople();
+	const [submitError, setSubmitError] = useState("");
+	const {
+		control,
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+	} = useForm<TransactionFormData>({
+		resolver: zodResolver(transactionSchema),
+		defaultValues: {
+			personId: 0,
+			type: "expense",
+			description: "",
+			value: 0,
+			category: "",
+			date: "",
+			observation: "",
+		},
+	});
+
+	const onSubmit = async (data: TransactionFormData) => {
+		try {
+			setSubmitError("");
+			await createTransaction.mutateAsync(data);
+			navigate(ROUTES.transactions);
+		} catch {
+			setSubmitError("Não foi possível registrar a transação.");
+		}
+	};
+
 	return (
-		<section className="section-container">
+		<section className="transaction-register-page">
 			<PageHeader data={TransactionsRegisterHeaderData} />
 
-			<div className="form-container">
-				<form className="transaction-form">
-					<div className="form-grid">
-						<FormControl fullWidth>
+			<div className="transaction-register-page__form-container">
+				<form className="transaction-form" onSubmit={handleSubmit(onSubmit)}>
+					{submitError && <Alert severity="error">{submitError}</Alert>}
+
+					<div className="transaction-form__grid">
+						<FormControl fullWidth error={Boolean(errors.personId)}>
 							<InputLabel id="person-label">Pessoa</InputLabel>
 
-							<Select
-								labelId="person-label"
-								label="Pessoa"
-								defaultValue=""
-							>
-								<MenuItem value="">
-									<em>Selecione uma pessoa</em>
-								</MenuItem>
+							<Controller
+								name="personId"
+								control={control}
+								render={({ field }) => (
+									<Select
+										{...field}
+										labelId="person-label"
+										label="Pessoa"
+									>
+										<MenuItem value={0}>
+											<em>Selecione uma pessoa</em>
+										</MenuItem>
 
-								<MenuItem value="1">Raphael Muniz</MenuItem>
-
-								<MenuItem value="2">João Silva</MenuItem>
-							</Select>
+										{people.map((person) => (
+											<MenuItem
+												key={person.id}
+												value={person.id}
+											>
+												{person.name}
+											</MenuItem>
+										))}
+									</Select>
+								)}
+							/>
+							<FormHelperText>
+								{errors.personId?.message}
+							</FormHelperText>
 						</FormControl>
 
-						<FormControl fullWidth>
+						<FormControl fullWidth error={Boolean(errors.type)}>
 							<InputLabel id="type-label">Tipo</InputLabel>
 
-							<Select
-								labelId="type-label"
-								label="Tipo"
-								defaultValue=""
-							>
-								<MenuItem value="entrada">Entrada</MenuItem>
+							<Controller
+								name="type"
+								control={control}
+								render={({ field }) => (
+									<Select
+										{...field}
+										labelId="type-label"
+										label="Tipo"
+									>
+										<MenuItem value="income">Entrada</MenuItem>
 
-								<MenuItem value="saida">Saída</MenuItem>
-							</Select>
+										<MenuItem value="expense">Saída</MenuItem>
+									</Select>
+								)}
+							/>
+							<FormHelperText>{errors.type?.message}</FormHelperText>
 						</FormControl>
 
 						<TextField
 							label="Descrição"
 							placeholder="Ex.: Conta de energia"
 							fullWidth
+							{...register("description")}
+							error={Boolean(errors.description)}
+							helperText={errors.description?.message}
 						/>
 
-						<TextField label="Valor" type="number" fullWidth />
+						<TextField
+							label="Valor"
+							type="number"
+							fullWidth
+							{...register("value", { valueAsNumber: true })}
+							error={Boolean(errors.value)}
+							helperText={errors.value?.message}
+						/>
 
-						<FormControl fullWidth>
+						<FormControl fullWidth error={Boolean(errors.category)}>
 							<InputLabel id="category-label">
 								Categoria
 							</InputLabel>
 
-							<Select
-								labelId="category-label"
-								label="Categoria"
-								defaultValue=""
-							>
-								<MenuItem value="alimentacao">
-									Alimentação
-								</MenuItem>
+							<Controller
+								name="category"
+								control={control}
+								render={({ field }) => (
+									<Select
+										{...field}
+										labelId="category-label"
+										label="Categoria"
+									>
+										<MenuItem value="">
+											<em>Selecione uma categoria</em>
+										</MenuItem>
+										<MenuItem value="Alimentação">
+											Alimentação
+										</MenuItem>
 
-								<MenuItem value="moradia">Moradia</MenuItem>
+										<MenuItem value="Moradia">Moradia</MenuItem>
 
-								<MenuItem value="transporte">
-									Transporte
-								</MenuItem>
+										<MenuItem value="Transporte">
+											Transporte
+										</MenuItem>
 
-								<MenuItem value="saude">Saúde</MenuItem>
+										<MenuItem value="Saúde">Saúde</MenuItem>
 
-								<MenuItem value="outros">Outros</MenuItem>
-							</Select>
+										<MenuItem value="Outros">Outros</MenuItem>
+									</Select>
+								)}
+							/>
+							<FormHelperText>
+								{errors.category?.message}
+							</FormHelperText>
 						</FormControl>
 
 						<TextField
 							label="Data"
 							type="date"
 							fullWidth
+							{...register("date")}
+							error={Boolean(errors.date)}
+							helperText={errors.date?.message}
 							slotProps={{
 								inputLabel: {
 									shrink: true,
@@ -112,16 +203,17 @@ const TransactionRegisterPage = () => {
 						/>
 					</div>
 
-					<div className="form-observation">
+					<div className="transaction-form__observation">
 						<TextField
 							label="Observação"
 							multiline
 							rows={3}
 							fullWidth
+							{...register("observation")}
 						/>
 					</div>
 
-					<div className="form-actions">
+					<div className="transaction-form__actions">
 						<Button
 							component={Link}
 							to={ROUTES.transactions}
@@ -143,8 +235,11 @@ const TransactionRegisterPage = () => {
 						</Button>
 
 						<Button
+							type="submit"
 							variant="contained"
 							startIcon={<SaveIcon />}
+							loading={isSubmitting}
+							disabled={isSubmitting}
 							sx={{
 								backgroundColor: "#2e7d32",
 								boxShadow: "none",

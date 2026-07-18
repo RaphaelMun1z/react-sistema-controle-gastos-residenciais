@@ -1,7 +1,7 @@
-import "../../../../components/layout/AuthTemplate/AuthTemplate.scss";
+import "../../../../shared/components/layout/AuthTemplate/AuthTemplate.scss";
 
 // Componentes do Material UI
-import { Button, TextField } from "@mui/material";
+import { Alert, Button, TextField } from "@mui/material";
 
 // Ícones
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
@@ -10,26 +10,64 @@ import GoogleIcon from "@mui/icons-material/Google";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
 // React Router
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+	signInSchema,
+	type SignInFormData,
+} from "../../schemas/authSchemas";
+import { useAuth } from "../../hooks/useAuth";
+import { useState } from "react";
 
 const SignIn = () => {
+	const navigate = useNavigate();
+	const { signIn } = useAuth();
+	const [submitError, setSubmitError] = useState("");
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+	} = useForm<SignInFormData>({
+		resolver: zodResolver(signInSchema),
+		defaultValues: {
+			email: "",
+			password: "",
+		},
+	});
+
+	const onSubmit = async (data: SignInFormData) => {
+		try {
+			setSubmitError("");
+			await signIn(data);
+			navigate(ROUTES.people);
+		} catch {
+			setSubmitError("Não foi possível acessar sua conta.");
+		}
+	};
+
 	return (
 		<div className="form-container">
 			<header className="form-header">
 				<h1>Acesse sua conta</h1>
 			</header>
 
-			<form className="auth-form">
+			<form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
+				{submitError && <Alert severity="error">{submitError}</Alert>}
+
 				<div className="input-container">
 					<label htmlFor="email">E-mail</label>
 
 					<TextField
 						id="email"
 						type="email"
+						{...register("email")}
 						fullWidth
 						size="small"
 						placeholder="Digite seu e-mail"
+						error={Boolean(errors.email)}
+						helperText={errors.email?.message}
 						slotProps={{
 							input: {
 								startAdornment: (
@@ -46,9 +84,12 @@ const SignIn = () => {
 					<TextField
 						id="password"
 						type="password"
+						{...register("password")}
 						fullWidth
 						size="small"
 						placeholder="Digite sua senha"
+						error={Boolean(errors.password)}
+						helperText={errors.password?.message}
 						slotProps={{
 							input: {
 								startAdornment: (
@@ -68,6 +109,8 @@ const SignIn = () => {
 					variant="contained"
 					fullWidth
 					className="submit-button"
+					loading={isSubmitting}
+					disabled={isSubmitting}
 				>
 					Entrar
 				</Button>
@@ -78,13 +121,13 @@ const SignIn = () => {
 			</div>
 
 			<div className="social-buttons">
-				<Button variant="outlined">
+				<Button variant="outlined" aria-label="Entrar com Google">
 					<GoogleIcon className="input-icon" />
 
 					<span className="social-media-login-name">Google</span>
 				</Button>
 
-				<Button variant="outlined">
+				<Button variant="outlined" aria-label="Entrar com GitHub">
 					<GitHubIcon className="input-icon" />
 
 					<span className="social-media-login-name">GitHub</span>

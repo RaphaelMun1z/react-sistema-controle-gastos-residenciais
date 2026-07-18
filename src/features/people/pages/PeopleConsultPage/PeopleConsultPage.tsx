@@ -7,24 +7,19 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Table, {
 	type TableAction,
 	type TableColumn,
-} from "../../../../components/Table/Table";
-import { Button } from "@mui/material";
+} from "../../../../shared/components/Table/Table";
+import { Alert, Button, CircularProgress, Snackbar } from "@mui/material";
 import { PersonAdd } from "@mui/icons-material";
+import { useState } from "react";
 
 // React Router
 import { Link } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
 
 // Componentes Locais
-import PageHeader from "../../../../components/PageHeader/PageHeader";
-
-// Interfaces
-interface Person {
-	id: number;
-	name: string;
-	age: number;
-	email: string;
-}
+import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
+import { usePeople, useRemovePerson } from "../../hooks/usePeople";
+import type { Person } from "../../types/person";
 
 // Colunas da tabela de pessoas
 const columns: TableColumn<Person>[] = [
@@ -43,34 +38,6 @@ const columns: TableColumn<Person>[] = [
 	},
 ];
 
-// Dados temporários
-const people: Person[] = [
-	{
-		id: 1,
-		name: "Raphael Muniz",
-		age: 25,
-		email: "raphael@email.com",
-	},
-	{
-		id: 2,
-		name: "João Silva",
-		age: 30,
-		email: "joao@email.com",
-	},
-];
-
-// Ações disponíveis na tabela de pessoas
-const actions: TableAction<Person>[] = [
-	{
-		label: "Excluir",
-		icon: <DeleteIcon />,
-		color: "error",
-		onClick: (person) => {
-			console.log("Excluir:", person);
-		},
-	},
-];
-
 const PeopleConsultHeaderData = {
 	sector: "Pessoas",
 	sectorPath: "/pessoas",
@@ -79,11 +46,35 @@ const PeopleConsultHeaderData = {
 };
 
 const PeopleConsultPage = () => {
+	const { data: people = [], isLoading, isError } = usePeople();
+	const removePerson = useRemovePerson();
+	const [feedbackMessage, setFeedbackMessage] = useState("");
+
+	const actions: TableAction<Person>[] = [
+		{
+			label: "Excluir",
+			icon: <DeleteIcon />,
+			color: "error",
+			onClick: (person) => {
+				const shouldRemove = window.confirm(
+					`Deseja excluir ${person.name}?`,
+				);
+
+				if (shouldRemove) {
+					removePerson.mutate(person.id, {
+						onSuccess: () =>
+							setFeedbackMessage("Pessoa excluída com sucesso."),
+					});
+				}
+			},
+		},
+	];
+
 	return (
-		<section className="section-container">
+		<section className="people-consult-page">
 			<PageHeader data={PeopleConsultHeaderData} />
 
-			<div className="create-btn-container">
+			<div className="people-consult-page__create">
 				<Button
 					component={Link}
 					variant="outlined"
@@ -94,14 +85,32 @@ const PeopleConsultPage = () => {
 				</Button>
 			</div>
 
-			<div className="table-container">
-				<Table
-					columns={columns}
-					rows={people}
-					getRowId={(person) => person.id}
-					actions={actions}
-				/>
+			<div className="people-consult-page__table">
+				{isLoading && <CircularProgress aria-label="Carregando pessoas" />}
+
+				{isError && (
+					<Alert severity="error">
+						Não foi possível carregar as pessoas.
+					</Alert>
+				)}
+
+				{!isLoading && !isError && (
+					<Table
+						columns={columns}
+						rows={people}
+						getRowId={(person) => person.id}
+						actions={actions}
+						emptyMessage="Nenhuma pessoa registrada."
+					/>
+				)}
 			</div>
+
+			<Snackbar
+				open={Boolean(feedbackMessage)}
+				autoHideDuration={3000}
+				onClose={() => setFeedbackMessage("")}
+				message={feedbackMessage}
+			/>
 		</section>
 	);
 };
