@@ -72,7 +72,6 @@ const PersonSummaryCard = ({ person }: PersonSummaryCardProps) => {
 
 						<div>
 							<strong>Saldo</strong>
-							<p>Receitas - despesas</p>
 						</div>
 					</div>
 

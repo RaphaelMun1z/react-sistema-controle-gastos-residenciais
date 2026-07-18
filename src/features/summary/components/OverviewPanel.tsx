@@ -55,7 +55,6 @@ const OverviewPanel = ({ summary }: OverviewPanelProps) => {
 
 						<div>
 							<strong>Saldo</strong>
-							<p>Receitas - despesas</p>
 						</div>
 					</div>
 
