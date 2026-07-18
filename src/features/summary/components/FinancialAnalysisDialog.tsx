@@ -15,6 +15,7 @@ import type {
 } from "../types/financialAnalysis";
 import FinancialAnalysisLoading from "./FinancialAnalysisLoading";
 import FinancialAnalysisResult from "./FinancialAnalysisResult";
+import walletImage from "../../../assets/images/wallet.png";
 import "./FinancialAnalysisDialog.scss";
 
 interface FinancialAnalysisDialogProps {
@@ -55,7 +56,11 @@ const FinancialAnalysisDialog = ({
 		>
 			<DialogTitle id="financial-analysis-dialog-title">
 				<span>Análise financeira com IA</span>
-				<IconButton aria-label="Fechar análise" onClick={onClose} disabled={isPending}>
+				<IconButton
+					aria-label="Fechar análise"
+					onClick={onClose}
+					disabled={isPending}
+				>
 					<CloseIcon />
 				</IconButton>
 			</DialogTitle>
@@ -67,6 +72,8 @@ const FinancialAnalysisDialog = ({
 					<ErrorState
 						title="Ainda não há dados suficientes para uma análise"
 						description="Registre algumas transações para que possamos identificar padrões e gerar recomendações."
+						image={walletImage}
+						imageAlt="Carteira vazia"
 						actionLabel="Fechar"
 						onRetry={onClose}
 					/>
