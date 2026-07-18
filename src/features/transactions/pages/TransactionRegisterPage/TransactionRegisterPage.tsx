@@ -29,6 +29,8 @@ import {
 import { useCreateTransaction } from "../../hooks/useTransactions";
 import { usePeople } from "../../../people/hooks/usePeople";
 import { useState } from "react";
+import ErrorState from "../../../../shared/components/DataState/ErrorState";
+import { getApiErrorMessage } from "../../../../shared/api/apiError";
 
 const TransactionsRegisterHeaderData = {
 	sector: "Transações",
@@ -40,7 +42,12 @@ const TransactionsRegisterHeaderData = {
 const TransactionRegisterPage = () => {
 	const navigate = useNavigate();
 	const createTransaction = useCreateTransaction();
-	const { data: people = [] } = usePeople();
+	const {
+		data: people = [],
+		error: peopleError,
+		isError: isPeopleError,
+		refetch: refetchPeople,
+	} = usePeople();
 	const [submitError, setSubmitError] = useState("");
 	const {
 		control,
@@ -65,8 +72,8 @@ const TransactionRegisterPage = () => {
 			setSubmitError("");
 			await createTransaction.mutateAsync(data);
 			navigate(ROUTES.transactions);
-		} catch {
-			setSubmitError("Não foi possível registrar a transação.");
+		} catch (error) {
+			setSubmitError(getApiErrorMessage(error));
 		}
 	};
 
@@ -75,6 +82,14 @@ const TransactionRegisterPage = () => {
 			<PageHeader data={TransactionsRegisterHeaderData} />
 
 			<div className="transaction-register-page__form-container">
+				{isPeopleError && (
+					<ErrorState
+						title="Não foi possível carregar as pessoas"
+						description={getApiErrorMessage(peopleError)}
+						onRetry={() => void refetchPeople()}
+					/>
+				)}
+
 				<form className="transaction-form" onSubmit={handleSubmit(onSubmit)}>
 					{submitError && <Alert severity="error">{submitError}</Alert>}
 
@@ -239,7 +254,11 @@ const TransactionRegisterPage = () => {
 							variant="contained"
 							startIcon={<SaveIcon />}
 							loading={isSubmitting}
-							disabled={isSubmitting}
+							disabled={
+								isSubmitting ||
+								createTransaction.isPending ||
+								isPeopleError
+							}
 							sx={{
 								backgroundColor: "#2e7d32",
 								boxShadow: "none",

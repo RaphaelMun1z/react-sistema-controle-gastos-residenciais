@@ -7,6 +7,8 @@ import type {
 
 export interface AuthContextValue {
 	user: AuthUser | null;
+	isLoading: boolean;
+	isAuthUnavailable: boolean;
 	isAuthenticated: boolean;
 	signIn: (credentials: SignInCredentials) => Promise<void>;
 	signUp: (data: SignUpData) => Promise<void>;

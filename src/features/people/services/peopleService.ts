@@ -1,36 +1,49 @@
-import type { CreatePersonInput, Person } from "../types/person";
-
-let people: Person[] = [
-	{
-		id: 1,
-		name: "Raphael Muniz",
-		age: 25,
-		email: "raphael@email.com",
-	},
-	{
-		id: 2,
-		name: "João Silva",
-		age: 30,
-		email: "joao@email.com",
-	},
-];
+import { API_ENDPOINTS } from "../../../shared/api/apiEndpoints";
+import { httpClient } from "../../../shared/api/httpClient";
+import type { CreatePersonInput, Person, UpdatePersonInput } from "../types/person";
+import type {
+	CreatePersonRequestDTO,
+	PersonResponseDTO,
+	UpdatePersonRequestDTO,
+} from "../types/personDtos";
+import { mapPersonResponseToPerson } from "../types/personDtos";
 
 export const peopleService = {
-	async list(): Promise<Person[]> {
-		return people;
+	async getPeople(): Promise<Person[]> {
+		const people = await httpClient.get<PersonResponseDTO[]>(
+			API_ENDPOINTS.people,
+		);
+
+		return people.map(mapPersonResponseToPerson);
 	},
 
-	async create(input: CreatePersonInput): Promise<Person> {
-		const person = {
-			id: Date.now(),
-			...input,
-		};
+	async getPersonById(id: number): Promise<Person> {
+		const person = await httpClient.get<PersonResponseDTO>(
+			API_ENDPOINTS.personById(id),
+		);
 
-		people = [...people, person];
-		return person;
+		return mapPersonResponseToPerson(person);
 	},
 
-	async remove(id: number): Promise<void> {
-		people = people.filter((person) => person.id !== id);
+	async createPerson(input: CreatePersonInput): Promise<Person> {
+		const person = await httpClient.post<
+			PersonResponseDTO,
+			CreatePersonRequestDTO
+		>(API_ENDPOINTS.people, input);
+
+		return mapPersonResponseToPerson(person);
+	},
+
+	async updatePerson(id: number, input: UpdatePersonInput): Promise<Person> {
+		const person = await httpClient.put<
+			PersonResponseDTO,
+			UpdatePersonRequestDTO
+		>(API_ENDPOINTS.personById(id), input);
+
+		return mapPersonResponseToPerson(person);
+	},
+
+	async deletePerson(id: number): Promise<void> {
+		await httpClient.delete<void>(API_ENDPOINTS.personById(id));
 	},
 };

@@ -21,6 +21,7 @@ import {
 } from "../../schemas/authSchemas";
 import { useAuth } from "../../hooks/useAuth";
 import { useState } from "react";
+import { getApiErrorMessage } from "../../../../shared/api/apiError";
 
 const SignUp = () => {
 	const navigate = useNavigate();
@@ -45,8 +46,8 @@ const SignUp = () => {
 			setSubmitError("");
 			await signUp(data);
 			navigate(ROUTES.people);
-		} catch {
-			setSubmitError("Não foi possível criar sua conta.");
+		} catch (error) {
+			setSubmitError(getApiErrorMessage(error));
 		}
 	};
 

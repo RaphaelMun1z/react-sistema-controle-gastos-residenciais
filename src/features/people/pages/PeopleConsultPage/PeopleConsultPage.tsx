@@ -8,7 +8,7 @@ import Table, {
 	type TableAction,
 	type TableColumn,
 } from "../../../../shared/components/Table/Table";
-import { Alert, Button, CircularProgress, Snackbar } from "@mui/material";
+import { Alert, Button, Snackbar } from "@mui/material";
 import { PersonAdd } from "@mui/icons-material";
 import { useState } from "react";
 
@@ -18,7 +18,11 @@ import { ROUTES } from "../../../../app/routes/paths";
 
 // Componentes Locais
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
-import { usePeople, useRemovePerson } from "../../hooks/usePeople";
+import ErrorState from "../../../../shared/components/DataState/ErrorState";
+import EmptyState from "../../../../shared/components/DataState/EmptyState";
+import LoadingState from "../../../../shared/components/DataState/LoadingState";
+import { getApiErrorMessage } from "../../../../shared/api/apiError";
+import { useDeletePerson, usePeople } from "../../hooks/usePeople";
 import type { Person } from "../../types/person";
 
 // Colunas da tabela de pessoas
@@ -46,9 +50,16 @@ const PeopleConsultHeaderData = {
 };
 
 const PeopleConsultPage = () => {
-	const { data: people = [], isLoading, isError } = usePeople();
-	const removePerson = useRemovePerson();
+	const {
+		data: people = [],
+		error,
+		isError,
+		isLoading,
+		refetch,
+	} = usePeople();
+	const deletePerson = useDeletePerson();
 	const [feedbackMessage, setFeedbackMessage] = useState("");
+	const [feedbackError, setFeedbackError] = useState("");
 
 	const actions: TableAction<Person>[] = [
 		{
@@ -61,9 +72,11 @@ const PeopleConsultPage = () => {
 				);
 
 				if (shouldRemove) {
-					removePerson.mutate(person.id, {
+					deletePerson.mutate(person.id, {
 						onSuccess: () =>
 							setFeedbackMessage("Pessoa excluída com sucesso."),
+						onError: (error) =>
+							setFeedbackError(getApiErrorMessage(error)),
 					});
 				}
 			},
@@ -86,24 +99,38 @@ const PeopleConsultPage = () => {
 			</div>
 
 			<div className="people-consult-page__table">
-				{isLoading && <CircularProgress aria-label="Carregando pessoas" />}
+				{isLoading && <LoadingState label="Carregando pessoas" />}
 
 				{isError && (
-					<Alert severity="error">
-						Não foi possível carregar as pessoas.
-					</Alert>
+					<ErrorState
+						title="Não foi possível carregar as pessoas"
+						description={getApiErrorMessage(error)}
+						onRetry={() => void refetch()}
+					/>
 				)}
 
-				{!isLoading && !isError && (
+				{!isLoading && !isError && people.length === 0 && (
+					<EmptyState
+						title="Nenhuma pessoa cadastrada ainda."
+						description="Cadastre uma pessoa para começar a registrar e acompanhar suas transações."
+					/>
+				)}
+
+				{!isLoading && !isError && people.length > 0 && (
 					<Table
 						columns={columns}
 						rows={people}
 						getRowId={(person) => person.id}
 						actions={actions}
-						emptyMessage="Nenhuma pessoa registrada."
 					/>
 				)}
 			</div>
+
+			{feedbackError && (
+				<Alert severity="error" onClose={() => setFeedbackError("")}>
+					{feedbackError}
+				</Alert>
+			)}
 
 			<Snackbar
 				open={Boolean(feedbackMessage)}

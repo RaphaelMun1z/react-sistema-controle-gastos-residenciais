@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Alert, CircularProgress } from "@mui/material";
 import "./SummaryPage.scss";
 
 // Componentes
@@ -12,6 +11,10 @@ import AiAnalysisCard from "../components/AiAnalysisCard";
 import { useSummary } from "../hooks/useSummary";
 import { usePeople } from "../../people/hooks/usePeople";
 import type { SummaryFilters as SummaryFiltersValue } from "../types/summary";
+import LoadingState from "../../../shared/components/DataState/LoadingState";
+import ErrorState from "../../../shared/components/DataState/ErrorState";
+import EmptyState from "../../../shared/components/DataState/EmptyState";
+import { getApiErrorMessage } from "../../../shared/api/apiError";
 
 const SummaryHeaderData = {
 	sector: "Resumo",
@@ -31,6 +34,8 @@ const SummaryPage = () => {
 	const { data: people = [] } = usePeople();
 	const {
 		data: summary = [],
+		error,
+		refetch,
 		isLoading,
 		isError,
 	} = useSummary(filters);
@@ -50,20 +55,22 @@ const SummaryPage = () => {
 				<div className="scroll-container">
 					<div className="summary-container">
 						{isLoading && (
-							<CircularProgress aria-label="Carregando resumo financeiro" />
+							<LoadingState label="Carregando resumo financeiro" />
 						)}
 
 						{isError && (
-							<Alert severity="error">
-								Não foi possível carregar o resumo financeiro.
-							</Alert>
+							<ErrorState
+								title="Não foi possível carregar o resumo financeiro"
+								description={getApiErrorMessage(error)}
+								onRetry={() => void refetch()}
+							/>
 						)}
 
 						{!isLoading && !isError && summary.length === 0 && (
-							<Alert severity="info">
-								Nenhum dado financeiro encontrado para os filtros
-								selecionados.
-							</Alert>
+							<EmptyState
+								title="Ainda não há dados suficientes para gerar o resumo financeiro."
+								description="Cadastre pessoas e transações para visualizar receitas, despesas e saldo."
+							/>
 						)}
 
 						{!isLoading &&

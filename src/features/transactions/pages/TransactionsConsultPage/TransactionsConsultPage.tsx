@@ -8,7 +8,7 @@ import Table, {
 } from "../../../../shared/components/Table/Table";
 
 // Componentes do Material UI
-import { Alert, Button, CircularProgress, Snackbar } from "@mui/material";
+import { Alert, Button, Snackbar } from "@mui/material";
 import { useState } from "react";
 
 // Ícones
@@ -19,11 +19,15 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { Link } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
 import {
-	useRemoveTransaction,
+	useDeleteTransaction,
 	useTransactions,
 } from "../../hooks/useTransactions";
 import type { Transaction } from "../../types/transaction";
 import { transactionTypeLabels } from "../../utils/transactionLabels";
+import ErrorState from "../../../../shared/components/DataState/ErrorState";
+import EmptyState from "../../../../shared/components/DataState/EmptyState";
+import LoadingState from "../../../../shared/components/DataState/LoadingState";
+import { getApiErrorMessage } from "../../../../shared/api/apiError";
 
 // Cabeçalho da página
 const TransactionsConsultHeaderData = {
@@ -74,9 +78,16 @@ const columns: TableColumn<Transaction>[] = [
 ];
 
 const TransactionsConsultPage = () => {
-	const { data: transactions = [], isLoading, isError } = useTransactions();
-	const removeTransaction = useRemoveTransaction();
+	const {
+		data: transactions = [],
+		error,
+		isError,
+		isLoading,
+		refetch,
+	} = useTransactions();
+	const deleteTransaction = useDeleteTransaction();
 	const [feedbackMessage, setFeedbackMessage] = useState("");
+	const [feedbackError, setFeedbackError] = useState("");
 
 	const actions: TableAction<Transaction>[] = [
 		{
@@ -89,9 +100,11 @@ const TransactionsConsultPage = () => {
 				);
 
 				if (shouldRemove) {
-					removeTransaction.mutate(transaction.id, {
+					deleteTransaction.mutate(transaction.id, {
 						onSuccess: () =>
 							setFeedbackMessage("Transação excluída com sucesso."),
+						onError: (error) =>
+							setFeedbackError(getApiErrorMessage(error)),
 					});
 				}
 			},
@@ -114,26 +127,38 @@ const TransactionsConsultPage = () => {
 			</div>
 
 			<div className="transactions-consult-page__table">
-				{isLoading && (
-					<CircularProgress aria-label="Carregando transações" />
-				)}
+				{isLoading && <LoadingState label="Carregando transações" />}
 
 				{isError && (
-					<Alert severity="error">
-						Não foi possível carregar as transações.
-					</Alert>
+					<ErrorState
+						title="Não foi possível carregar as transações"
+						description={getApiErrorMessage(error)}
+						onRetry={() => void refetch()}
+					/>
 				)}
 
-				{!isLoading && !isError && (
+				{!isLoading && !isError && transactions.length === 0 && (
+					<EmptyState
+						title="Nenhuma transação encontrada."
+						description="Registre uma nova transação ou ajuste os filtros utilizados."
+					/>
+				)}
+
+				{!isLoading && !isError && transactions.length > 0 && (
 					<Table
 						columns={columns}
 						rows={transactions}
 						getRowId={(transaction) => transaction.id}
 						actions={actions}
-						emptyMessage="Nenhuma transação registrada."
 					/>
 				)}
 			</div>
+
+			{feedbackError && (
+				<Alert severity="error" onClose={() => setFeedbackError("")}>
+					{feedbackError}
+				</Alert>
+			)}
 
 			<Snackbar
 				open={Boolean(feedbackMessage)}

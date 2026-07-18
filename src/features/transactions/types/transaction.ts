@@ -21,3 +21,12 @@ export interface CreateTransactionInput {
 	date: string;
 	observation?: string;
 }
+
+export type UpdateTransactionInput = Partial<CreateTransactionInput>;
+
+export interface TransactionFilters {
+	personId?: number;
+	type?: TransactionType;
+	startDate?: string;
+	endDate?: string;
+}

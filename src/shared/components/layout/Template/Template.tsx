@@ -71,8 +71,11 @@ const Template = () => {
 
 	// Redireciona para a página de login
 	const handleLogout = async () => {
-		await signOut();
-		navigate(ROUTES.signIn);
+		try {
+			await signOut();
+		} finally {
+			navigate(ROUTES.signIn);
+		}
 	};
 
 	return (
@@ -91,7 +94,7 @@ const Template = () => {
 								{user?.name.charAt(0).toUpperCase() ?? "U"}
 							</Avatar>
 							<h2>{user?.name ?? "Usuário"}</h2>
-							<p>{user?.email ?? "sessao@local"}</p>
+							<p>{user?.email ?? "API indisponível"}</p>
 						</header>
 						<nav className="navbar-container">
 							<div className="links-container">

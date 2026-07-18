@@ -21,6 +21,7 @@ import {
 } from "../../schemas/personSchema";
 import { useCreatePerson } from "../../hooks/usePeople";
 import { useState } from "react";
+import { getApiErrorMessage } from "../../../../shared/api/apiError";
 
 const PersonRegisterHeaderData = {
 	sector: "Pessoas",
@@ -51,8 +52,8 @@ const PersonRegisterPage = () => {
 			setSubmitError("");
 			await createPerson.mutateAsync(data);
 			navigate(ROUTES.people);
-		} catch {
-			setSubmitError("Não foi possível registrar a pessoa.");
+		} catch (error) {
+			setSubmitError(getApiErrorMessage(error));
 		}
 	};
 
@@ -120,7 +121,7 @@ const PersonRegisterPage = () => {
 							variant="contained"
 							startIcon={<SaveIcon />}
 							loading={isSubmitting}
-							disabled={isSubmitting}
+							disabled={isSubmitting || createPerson.isPending}
 							sx={{
 								backgroundColor: "#2e7d32",
 								boxShadow: "none",

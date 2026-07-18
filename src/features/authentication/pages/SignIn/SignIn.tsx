@@ -20,6 +20,7 @@ import {
 } from "../../schemas/authSchemas";
 import { useAuth } from "../../hooks/useAuth";
 import { useState } from "react";
+import { getApiErrorMessage } from "../../../../shared/api/apiError";
 
 const SignIn = () => {
 	const navigate = useNavigate();
@@ -42,8 +43,8 @@ const SignIn = () => {
 			setSubmitError("");
 			await signIn(data);
 			navigate(ROUTES.people);
-		} catch {
-			setSubmitError("Não foi possível acessar sua conta.");
+		} catch (error) {
+			setSubmitError(getApiErrorMessage(error));
 		}
 	};
 

@@ -1,63 +1,69 @@
+import { API_ENDPOINTS } from "../../../shared/api/apiEndpoints";
+import { httpClient } from "../../../shared/api/httpClient";
 import type {
 	CreateTransactionInput,
 	Transaction,
+	TransactionFilters,
+	UpdateTransactionInput,
 } from "../types/transaction";
-
-let transactions: Transaction[] = [
-	{
-		id: 1,
-		personId: 1,
-		personName: "Raphael Muniz",
-		description: "Conta de energia",
-		category: "Moradia",
-		type: "expense",
-		value: 180.5,
-		date: "2026-07-18",
-	},
-	{
-		id: 2,
-		personId: 2,
-		personName: "João Silva",
-		description: "Compra supermercado",
-		category: "Alimentação",
-		type: "expense",
-		value: 320.75,
-		date: "2026-07-17",
-	},
-	{
-		id: 3,
-		personId: 1,
-		personName: "Raphael Muniz",
-		description: "Pagamento recebido",
-		category: "Renda",
-		type: "income",
-		value: 1500,
-		date: "2026-07-15",
-	},
-];
+import type {
+	CreateTransactionRequestDTO,
+	TransactionResponseDTO,
+	UpdateTransactionRequestDTO,
+} from "../types/transactionDtos";
+import { mapTransactionResponseToTransaction } from "../types/transactionDtos";
 
 export const transactionsService = {
-	async list(): Promise<Transaction[]> {
-		return transactions;
+	async getTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
+		const transactions = await httpClient.get<TransactionResponseDTO[]>(
+			API_ENDPOINTS.transactions,
+			{
+				params: filters
+					? {
+							personId: filters.personId,
+							type: filters.type,
+							startDate: filters.startDate,
+							endDate: filters.endDate,
+						}
+					: undefined,
+			},
+		);
+
+		return transactions.map(mapTransactionResponseToTransaction);
 	},
 
-	async create(input: CreateTransactionInput): Promise<Transaction> {
-		const personNameById: Record<number, string> = {
-			1: "Raphael Muniz",
-			2: "João Silva",
-		};
+	async getTransactionById(id: number): Promise<Transaction> {
+		const transaction = await httpClient.get<TransactionResponseDTO>(
+			API_ENDPOINTS.transactionById(id),
+		);
 
-		const transaction = {
-			id: Date.now(),
-			personName: personNameById[input.personId] ?? "Pessoa",
-			...input,
-		};
-
-		transactions = [...transactions, transaction];
-		return transaction;
+		return mapTransactionResponseToTransaction(transaction);
 	},
 
-	async remove(id: number): Promise<void> {
-		transactions = transactions.filter((transaction) => transaction.id !== id);
+	async createTransaction(
+		input: CreateTransactionInput,
+	): Promise<Transaction> {
+		const transaction = await httpClient.post<
+			TransactionResponseDTO,
+			CreateTransactionRequestDTO
+		>(API_ENDPOINTS.transactions, input);
+
+		return mapTransactionResponseToTransaction(transaction);
+	},
+
+	async updateTransaction(
+		id: number,
+		input: UpdateTransactionInput,
+	): Promise<Transaction> {
+		const transaction = await httpClient.put<
+			TransactionResponseDTO,
+			UpdateTransactionRequestDTO
+		>(API_ENDPOINTS.transactionById(id), input);
+
+		return mapTransactionResponseToTransaction(transaction);
+	},
+
+	async deleteTransaction(id: number): Promise<void> {
+		await httpClient.delete<void>(API_ENDPOINTS.transactionById(id));
 	},
 };

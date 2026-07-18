@@ -10,3 +10,5 @@ export interface CreatePersonInput {
 	email: string;
 	age: number;
 }
+
+export type UpdatePersonInput = Partial<CreatePersonInput>;
