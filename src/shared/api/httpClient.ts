@@ -1,7 +1,7 @@
+import { env } from "../config/env";
 import { createApiError, createHttpError } from "./apiError";
 
-const API_BASE_URL =
-	import.meta.env.VITE_API_URL ?? "http://localhost:8080/api";
+const API_BASE_URL = env.apiUrl;
 const DEFAULT_TIMEOUT_IN_MS = 10000;
 
 const buildUrl = (path: string) => `${API_BASE_URL}${path}`;

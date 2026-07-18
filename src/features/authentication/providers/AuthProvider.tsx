@@ -6,6 +6,7 @@ import {
 	type ReactNode,
 } from "react";
 import { createApiError } from "../../../shared/api/apiError";
+import { env } from "../../../shared/config/env";
 import { authenticationService } from "../services/authenticationService";
 import type { AuthUser, SignInCredentials, SignUpData } from "../types/auth";
 import { AuthContext, type AuthContextValue } from "../contexts/AuthContext";
@@ -16,10 +17,14 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
 	const [user, setUser] = useState<AuthUser | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
+	const [isLoading, setIsLoading] = useState(!env.bypassAuth);
 	const [isAuthUnavailable, setIsAuthUnavailable] = useState(false);
 
 	useEffect(() => {
+		if (env.bypassAuth) {
+			return;
+		}
+
 		let isMounted = true;
 
 		const loadCurrentUser = async () => {
