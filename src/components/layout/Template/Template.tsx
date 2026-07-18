@@ -1,6 +1,7 @@
 import React from "react";
-import "./template.scss";
+import "./Template.scss";
 import { Outlet, useLocation, useNavigate } from "react-router";
+import { ROUTES } from "../../../app/routes/paths";
 
 // Assets
 import logo from "../../../assets/images/rm-logo-branco.png";
@@ -27,19 +28,19 @@ const navItems = [
 	{
 		value: "pessoas",
 		label: "Pessoas",
-		path: "/pessoas",
+		path: ROUTES.people,
 		icon: <Groups2Icon />,
 	},
 	{
 		value: "transacoes",
 		label: "Transações",
-		path: "/transacoes",
+		path: ROUTES.transactions,
 		icon: <ReceiptLongIcon />,
 	},
 	{
-		value: "Summary",
+		value: "resumo",
 		label: "Resumo",
-		path: "/resumo",
+		path: ROUTES.summary,
 		icon: <PaidIcon />,
 	},
 ];
@@ -68,7 +69,7 @@ const Template = () => {
 
 	// Redireciona para a página de login
 	const handleLogout = () => {
-		navigate("/login");
+		navigate(ROUTES.signIn);
 	};
 
 	return (

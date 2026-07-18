@@ -2,6 +2,7 @@ import { Button } from "@mui/material";
 import "./NotFoundPage.scss";
 import notFoundImage from "../../../../assets/images/notFoundImage.png";
 import { useNavigate } from "react-router";
+import { ROUTES } from "../../../../app/routes/paths";
 
 const NotFoundPage = () => {
 	const navigate = useNavigate();
@@ -20,7 +21,7 @@ const NotFoundPage = () => {
 			<Button
 				className="not-found-button"
 				variant="outlined"
-				onClick={() => navigate("/resumo")}
+				onClick={() => navigate(ROUTES.summary)}
 			>
 				Ir para Resumo
 			</Button>

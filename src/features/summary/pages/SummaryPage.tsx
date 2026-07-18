@@ -3,6 +3,7 @@ import "./SummaryPage.scss";
 
 // Componentes
 import PageHeader from "../../../components/PageHeader/PageHeader";
+import { ROUTES } from "../../../app/routes/paths";
 
 // Componentes do Material UI
 import {
@@ -36,7 +37,7 @@ interface PersonSummary {
 // Cabeçalho da página
 const SummaryHeaderData = {
 	sector: "Resumo",
-	sectorPath: "/resumo",
+	sectorPath: ROUTES.summary,
 	currentPage: "Consultar",
 	title: "Resumo Financeiro",
 };

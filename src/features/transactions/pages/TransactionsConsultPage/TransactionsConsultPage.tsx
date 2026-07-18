@@ -12,11 +12,11 @@ import { Button } from "@mui/material";
 
 // Ícones
 import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 // React Router
 import { Link } from "react-router";
+import { ROUTES } from "../../../../app/routes/paths";
 
 // Interfaces
 interface Transaction {
@@ -122,7 +122,7 @@ const TransactionsConsultPage = () => {
 			<div className="create-btn-container">
 				<Button
 					component={Link}
-					to="/transacoes/registrar"
+					to={ROUTES.transactionRegister}
 					variant="outlined"
 					startIcon={<AddIcon />}
 				>

@@ -2,7 +2,6 @@ import "./PeopleConsultPage.scss";
 
 // Ícones do Material Icons
 import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 
 // Componentes do Material UI
 import Table, {
@@ -14,6 +13,7 @@ import { PersonAdd } from "@mui/icons-material";
 
 // React Router
 import { Link } from "react-router";
+import { ROUTES } from "../../../../app/routes/paths";
 
 // Componentes Locais
 import PageHeader from "../../../../components/PageHeader/PageHeader";
@@ -87,7 +87,7 @@ const PeopleConsultPage = () => {
 				<Button
 					component={Link}
 					variant="outlined"
-					to="/pessoas/registrar"
+					to={ROUTES.personRegister}
 					startIcon={<PersonAdd />}
 				>
 					Registrar pessoa

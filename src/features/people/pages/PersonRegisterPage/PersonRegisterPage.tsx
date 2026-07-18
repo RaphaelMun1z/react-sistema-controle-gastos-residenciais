@@ -9,6 +9,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 // React Router
 import { Link } from "react-router";
+import { ROUTES } from "../../../../app/routes/paths";
 
 // Componentes Locais
 import PageHeader from "../../../../components/PageHeader/PageHeader";
@@ -47,7 +48,7 @@ const PersonRegisterPage = () => {
 					<div className="form-actions">
 						<Button
 							component={Link}
-							to="/pessoas"
+							to={ROUTES.people}
 							variant="outlined"
 							startIcon={<CloseIcon />}
 							sx={{

@@ -12,6 +12,7 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 
 // React Router
 import { Link } from "react-router";
+import { ROUTES } from "../../../../app/routes/paths";
 
 const SignUp = () => {
 	return (
@@ -129,7 +130,7 @@ const SignUp = () => {
 			</div>
 
 			<p className="auth-redirect">
-				Já possui uma conta? <Link to="/entrar">Entrar</Link>
+				Já possui uma conta? <Link to={ROUTES.signIn}>Entrar</Link>
 			</p>
 		</div>
 	);

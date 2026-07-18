@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router";
+import { ROUTES } from "./routes/paths";
 
 // Componentes Template
 import Template from "../components/layout/Template/Template";
@@ -27,11 +28,11 @@ export const router = createBrowserRouter([
 		element: <AuthTemplate />,
 		children: [
 			{
-				path: "/entrar",
+				path: ROUTES.signIn,
 				element: <SignIn />,
 			},
 			{
-				path: "/cadastrar",
+				path: ROUTES.signUp,
 				element: <SignUp />,
 			},
 		],
@@ -40,27 +41,27 @@ export const router = createBrowserRouter([
 		element: <Template />,
 		children: [
 			{
-				path: "/",
-				element: <Navigate to="/pessoas" replace />,
+				path: ROUTES.root,
+				element: <Navigate to={ROUTES.people} replace />,
 			},
 			{
-				path: "/pessoas",
+				path: ROUTES.people,
 				element: <PeopleConsultPage />,
 			},
 			{
-				path: "/pessoas/registrar",
+				path: ROUTES.personRegister,
 				element: <PersonRegisterPage />,
 			},
 			{
-				path: "/transacoes",
+				path: ROUTES.transactions,
 				element: <TransactionsConsultPage />,
 			},
 			{
-				path: "/transacoes/registrar",
+				path: ROUTES.transactionRegister,
 				element: <TransactionRegisterPage />,
 			},
 			{
-				path: "/summary",
+				path: ROUTES.summary,
 				element: <SummaryPage />,
 			},
 		],

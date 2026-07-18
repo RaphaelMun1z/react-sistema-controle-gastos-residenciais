@@ -11,6 +11,7 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 
 // React Router
 import { Link } from "react-router";
+import { ROUTES } from "../../../../app/routes/paths";
 
 const SignIn = () => {
 	return (
@@ -59,7 +60,7 @@ const SignIn = () => {
 				</div>
 
 				<div className="forgot-password">
-					<Link to="/recuperar-senha">Esqueceu sua senha?</Link>
+					<Link to={ROUTES.signIn}>Esqueceu sua senha?</Link>
 				</div>
 
 				<Button
@@ -92,7 +93,7 @@ const SignIn = () => {
 
 			<p className="auth-redirect">
 				Ainda não possui uma conta?{" "}
-				<Link to="/cadastrar">Criar conta</Link>
+				<Link to={ROUTES.signUp}>Criar conta</Link>
 			</p>
 		</div>
 	);

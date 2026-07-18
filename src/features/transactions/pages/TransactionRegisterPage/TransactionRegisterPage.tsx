@@ -17,6 +17,7 @@ import CloseIcon from "@mui/icons-material/Close";
 // Componentes Locais
 import PageHeader from "../../../../components/PageHeader/PageHeader";
 import { Link } from "react-router";
+import { ROUTES } from "../../../../app/routes/paths";
 
 const TransactionsRegisterHeaderData = {
 	sector: "Transações",
@@ -123,7 +124,7 @@ const TransactionRegisterPage = () => {
 					<div className="form-actions">
 						<Button
 							component={Link}
-							to="/transacoes"
+							to={ROUTES.transactions}
 							variant="outlined"
 							startIcon={<CloseIcon />}
 							sx={{
