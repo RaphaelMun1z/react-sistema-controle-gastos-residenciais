@@ -26,7 +26,7 @@ import type { Transaction } from "../../types/transaction";
 import { transactionTypeLabels } from "../../utils/transactionLabels";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../../shared/components/DataState/EmptyState";
-import LoadingState from "../../../../shared/components/DataState/LoadingState";
+import TableSkeleton from "../../../../shared/components/skeletons/TableSkeleton";
 import { getApiErrorMessage } from "../../../../shared/api/apiError";
 
 // Cabeçalho da página
@@ -127,7 +127,7 @@ const TransactionsConsultPage = () => {
 			</div>
 
 			<div className="transactions-consult-page__table">
-				{isLoading && <LoadingState label="Carregando transações" />}
+				{isLoading && <TableSkeleton columns={columns.length} rows={6} />}
 
 				{isError && (
 					<ErrorState

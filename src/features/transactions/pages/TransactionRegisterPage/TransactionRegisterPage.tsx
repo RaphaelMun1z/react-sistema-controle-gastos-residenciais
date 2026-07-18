@@ -9,6 +9,7 @@ import {
 	InputLabel,
 	MenuItem,
 	Select,
+	Skeleton,
 	TextField,
 } from "@mui/material";
 
@@ -46,6 +47,7 @@ const TransactionRegisterPage = () => {
 		data: people = [],
 		error: peopleError,
 		isError: isPeopleError,
+		isLoading: isPeopleLoading,
 		refetch: refetchPeople,
 	} = usePeople();
 	const [submitError, setSubmitError] = useState("");
@@ -94,37 +96,46 @@ const TransactionRegisterPage = () => {
 					{submitError && <Alert severity="error">{submitError}</Alert>}
 
 					<div className="transaction-form__grid">
-						<FormControl fullWidth error={Boolean(errors.personId)}>
-							<InputLabel id="person-label">Pessoa</InputLabel>
-
-							<Controller
-								name="personId"
-								control={control}
-								render={({ field }) => (
-									<Select
-										{...field}
-										labelId="person-label"
-										label="Pessoa"
-									>
-										<MenuItem value={0}>
-											<em>Selecione uma pessoa</em>
-										</MenuItem>
-
-										{people.map((person) => (
-											<MenuItem
-												key={person.id}
-												value={person.id}
-											>
-												{person.name}
-											</MenuItem>
-										))}
-									</Select>
-								)}
+						{isPeopleLoading ? (
+							<Skeleton
+								animation="wave"
+								variant="rounded"
+								height={56}
+								aria-label="Carregando pessoas"
 							/>
-							<FormHelperText>
-								{errors.personId?.message}
-							</FormHelperText>
-						</FormControl>
+						) : (
+							<FormControl fullWidth error={Boolean(errors.personId)}>
+								<InputLabel id="person-label">Pessoa</InputLabel>
+
+								<Controller
+									name="personId"
+									control={control}
+									render={({ field }) => (
+										<Select
+											{...field}
+											labelId="person-label"
+											label="Pessoa"
+										>
+											<MenuItem value={0}>
+												<em>Selecione uma pessoa</em>
+											</MenuItem>
+
+											{people.map((person) => (
+												<MenuItem
+													key={person.id}
+													value={person.id}
+												>
+													{person.name}
+												</MenuItem>
+											))}
+										</Select>
+									)}
+								/>
+								<FormHelperText>
+									{errors.personId?.message}
+								</FormHelperText>
+							</FormControl>
+						)}
 
 						<FormControl fullWidth error={Boolean(errors.type)}>
 							<InputLabel id="type-label">Tipo</InputLabel>
@@ -257,7 +268,8 @@ const TransactionRegisterPage = () => {
 							disabled={
 								isSubmitting ||
 								createTransaction.isPending ||
-								isPeopleError
+								isPeopleError ||
+								isPeopleLoading
 							}
 							sx={{
 								backgroundColor: "#2e7d32",

@@ -8,6 +8,7 @@ import { ROUTE_TITLES } from "./routes/pageTitles";
 import Template from "../shared/components/layout/Template/Template";
 import AuthTemplate from "../shared/components/layout/AuthTemplate/AuthTemplate";
 import PageTitle from "../shared/components/PageTitle/PageTitle";
+import PageSkeleton from "../shared/components/skeletons/PageSkeleton";
 import PrivateRoute from "../features/authentication/components/PrivateRoute";
 import PublicRoute from "../features/authentication/components/PublicRoute";
 
@@ -45,7 +46,7 @@ const NotFoundPage = lazy(
 );
 
 const withSuspense = (element: ReactNode) => (
-	<Suspense fallback={<div role="status">Carregando...</div>}>{element}</Suspense>
+	<Suspense fallback={<PageSkeleton />}>{element}</Suspense>
 );
 
 const withPageTitle = (element: ReactNode, title: string) => (

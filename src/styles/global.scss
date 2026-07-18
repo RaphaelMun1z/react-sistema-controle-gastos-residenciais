@@ -11,4 +11,10 @@ body {
 	width: 100%;
 	min-height: 100vh;
 	background: whitesmoke;
+	overflow-x: hidden;
+}
+
+img {
+	max-width: 100%;
+	height: auto;
 }

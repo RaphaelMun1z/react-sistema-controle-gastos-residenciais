@@ -65,9 +65,11 @@ const Table = <T,>({
 			elevation={0}
 			sx={{
 				backgroundColor: "#f5f5f5",
+				maxWidth: "100%",
+				overflowX: "auto",
 			}}
 		>
-			<MuiTable>
+			<MuiTable sx={{ minWidth: 640 }}>
 				<TableHead>
 					<TableRow>
 						{columns.map((column) => (
@@ -128,6 +130,7 @@ const Table = <T,>({
 													onClick={() =>
 														action.onClick(row)
 													}
+													sx={{ minWidth: 44, minHeight: 44 }}
 												>
 													{action.icon}
 												</IconButton>

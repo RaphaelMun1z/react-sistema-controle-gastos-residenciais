@@ -1,4 +1,4 @@
-import { CircularProgress } from "@mui/material";
+import { Skeleton } from "@mui/material";
 import "./DataState.scss";
 
 interface LoadingStateProps {
@@ -7,8 +7,10 @@ interface LoadingStateProps {
 
 const LoadingState = ({ label }: LoadingStateProps) => {
 	return (
-		<div className="data-state data-state--loading" role="status">
-			<CircularProgress aria-label={label} />
+		<div className="data-state data-state--loading" role="status" aria-label={label}>
+			<Skeleton animation="wave" width="60%" height={28} />
+			<Skeleton animation="wave" width="100%" height={44} />
+			<Skeleton animation="wave" width="90%" height={44} />
 		</div>
 	);
 };

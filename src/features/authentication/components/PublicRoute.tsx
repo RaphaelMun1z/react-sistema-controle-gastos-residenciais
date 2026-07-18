@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router";
-import { CircularProgress } from "@mui/material";
 import { ROUTES } from "../../../app/routes/paths";
 import { env } from "../../../shared/config/env";
+import PageSkeleton from "../../../shared/components/skeletons/PageSkeleton";
 import { useAuth } from "../hooks/useAuth";
 
 const PublicRoute = () => {
@@ -12,7 +12,7 @@ const PublicRoute = () => {
 	}
 
 	if (isLoading) {
-		return <CircularProgress aria-label="Verificando sessão" />;
+		return <PageSkeleton />;
 	}
 
 	if (isAuthenticated) {

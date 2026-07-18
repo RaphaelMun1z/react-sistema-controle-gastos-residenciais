@@ -11,10 +11,10 @@ import AiAnalysisCard from "../components/AiAnalysisCard";
 import { useSummary } from "../hooks/useSummary";
 import { usePeople } from "../../people/hooks/usePeople";
 import type { SummaryFilters as SummaryFiltersValue } from "../types/summary";
-import LoadingState from "../../../shared/components/DataState/LoadingState";
 import ErrorState from "../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../shared/components/DataState/EmptyState";
 import { getApiErrorMessage } from "../../../shared/api/apiError";
+import SummarySkeleton from "../components/SummarySkeleton";
 
 const SummaryHeaderData = {
 	sector: "Resumo",
@@ -37,58 +37,68 @@ const SummaryPage = () => {
 		error,
 		refetch,
 		isLoading,
+		isFetching,
 		isError,
 	} = useSummary(filters);
+
+	const shouldShowInitialSkeleton = isLoading && summary.length === 0;
 
 	return (
 		<section className="summary-page">
 			<PageHeader data={SummaryHeaderData} />
 
-			<SummaryFilters
-				filters={filters}
-				people={people}
-				onChange={setFilters}
-				onClear={() => setFilters(initialFilters)}
-			/>
+			{shouldShowInitialSkeleton ? (
+				<SummarySkeleton />
+			) : (
+				<>
+					<SummaryFilters
+						filters={filters}
+						people={people}
+						onChange={setFilters}
+						onClear={() => setFilters(initialFilters)}
+					/>
 
-			<div className="summary-layout">
-				<div className="scroll-container">
-					<div className="summary-container">
-						{isLoading && (
-							<LoadingState label="Carregando resumo financeiro" />
-						)}
+					{isFetching && summary.length > 0 && (
+						<span className="summary-page__fetching" role="status">
+							Atualizando dados...
+						</span>
+					)}
 
-						{isError && (
-							<ErrorState
-								title="Não foi possível carregar o resumo financeiro"
-								description={getApiErrorMessage(error)}
-								onRetry={() => void refetch()}
-							/>
-						)}
+					<div className="summary-layout">
+						<div className="scroll-container">
+							<div className="summary-container">
+								{isError && (
+									<ErrorState
+										title="Não foi possível carregar o resumo financeiro"
+										description={getApiErrorMessage(error)}
+										onRetry={() => void refetch()}
+									/>
+								)}
 
-						{!isLoading && !isError && summary.length === 0 && (
-							<EmptyState
-								title="Ainda não há dados suficientes para gerar o resumo financeiro."
-								description="Cadastre pessoas e transações para visualizar receitas, despesas e saldo."
-							/>
-						)}
+								{!isLoading && !isError && summary.length === 0 && (
+									<EmptyState
+										title="Ainda não há dados suficientes para gerar o resumo financeiro."
+										description="Cadastre pessoas e transações para visualizar receitas, despesas e saldo."
+									/>
+								)}
 
-						{!isLoading &&
-							!isError &&
-							summary.map((person) => (
-								<PersonSummaryCard
-									key={person.personId}
-									person={person}
-								/>
-							))}
+								{!isError &&
+									summary.map((person) => (
+										<PersonSummaryCard
+											key={person.personId}
+											person={person}
+										/>
+									))}
+							</div>
+						</div>
+
+						<aside className="summary-aside">
+							<OverviewPanel summary={summary} />
+							<AiAnalysisCard />
+						</aside>
 					</div>
-				</div>
-
-				<aside className="summary-aside">
-					<OverviewPanel summary={summary} />
-					<AiAnalysisCard />
-				</aside>
-			</div>
+				</>
+			)}
 		</section>
 	);
 };

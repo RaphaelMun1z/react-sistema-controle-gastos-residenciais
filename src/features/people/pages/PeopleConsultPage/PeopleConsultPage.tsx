@@ -20,7 +20,7 @@ import { ROUTES } from "../../../../app/routes/paths";
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../../shared/components/DataState/EmptyState";
-import LoadingState from "../../../../shared/components/DataState/LoadingState";
+import TableSkeleton from "../../../../shared/components/skeletons/TableSkeleton";
 import { getApiErrorMessage } from "../../../../shared/api/apiError";
 import { useDeletePerson, usePeople } from "../../hooks/usePeople";
 import type { Person } from "../../types/person";
@@ -99,7 +99,7 @@ const PeopleConsultPage = () => {
 			</div>
 
 			<div className="people-consult-page__table">
-				{isLoading && <LoadingState label="Carregando pessoas" />}
+				{isLoading && <TableSkeleton columns={columns.length} />}
 
 				{isError && (
 					<ErrorState
