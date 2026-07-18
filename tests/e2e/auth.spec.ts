@@ -70,3 +70,73 @@ test("abre e fecha navegação mobile pelo menu", async ({ page }, testInfo) => 
 		page.getByRole("navigation", { name: "Navegação principal" }),
 	).not.toBeVisible();
 });
+
+test("executa fluxo da análise financeira com IA", async ({ page }, testInfo) => {
+	test.skip(!isBypassAuthEnabled || testInfo.project.name !== "desktop");
+
+	await page.route("**/api/people", async (route) => {
+		await route.fulfill({
+			json: [
+				{
+					id: 1,
+					name: "Raphael Muniz",
+					email: "raphael@email.com",
+					age: 25,
+				},
+			],
+		});
+	});
+
+	await page.route("**/api/summary/analysis", async (route) => {
+		await new Promise((resolve) => setTimeout(resolve, 300));
+
+		await route.fulfill({
+			json: {
+				summary: "Análise gerada pelo backend de teste.",
+				positives: [
+					{
+						title: "Saldo positivo",
+						description: "As receitas superaram as despesas no período.",
+					},
+				],
+				warnings: [],
+				recommendations: [
+					{
+						title: "Acompanhe categorias",
+						description: "Revise seus gastos recorrentes mensalmente.",
+					},
+				],
+			},
+		});
+	});
+
+	await page.route(/\/api\/summary(\?.*)?$/, async (route) => {
+		await route.fulfill({
+			json: [
+				{
+					personId: 1,
+					personName: "Raphael Muniz",
+					income: 1500,
+					expenses: 300,
+				},
+			],
+		});
+	});
+
+	await page.goto("/resumo");
+	await expect(page.getByRole("heading", { name: "Raphael Muniz" })).toBeVisible();
+
+	await page.getByRole("button", { name: "Analisar transações" }).click();
+
+	await expect(
+		page.getByRole("status", { name: "Analisando suas finanças" }),
+	).toBeVisible();
+	await expect(page.getByText("Análise gerada pelo backend de teste.")).toBeVisible();
+	await expect(page.getByText("Saldo positivo")).toBeVisible();
+	await expect(page.getByText("Acompanhe categorias")).toBeVisible();
+
+	await page.getByRole("button", { name: "Fechar", exact: true }).click();
+	await expect(
+		page.getByRole("dialog", { name: "Análise financeira com IA" }),
+	).not.toBeVisible();
+});
