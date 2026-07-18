@@ -2,10 +2,12 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
 import { ROUTES } from "./routes/paths";
+import { ROUTE_TITLES } from "./routes/pageTitles";
 
 // Componentes Template
 import Template from "../shared/components/layout/Template/Template";
 import AuthTemplate from "../shared/components/layout/AuthTemplate/AuthTemplate";
+import PageTitle from "../shared/components/PageTitle/PageTitle";
 import PrivateRoute from "../features/authentication/components/PrivateRoute";
 import PublicRoute from "../features/authentication/components/PublicRoute";
 
@@ -46,6 +48,10 @@ const withSuspense = (element: ReactNode) => (
 	<Suspense fallback={<div role="status">Carregando...</div>}>{element}</Suspense>
 );
 
+const withPageTitle = (element: ReactNode, title: string) => (
+	<PageTitle title={title}>{withSuspense(element)}</PageTitle>
+);
+
 export const router = createBrowserRouter([
 	{
 		element: <PublicRoute />,
@@ -55,11 +61,11 @@ export const router = createBrowserRouter([
 				children: [
 					{
 						path: ROUTES.signIn,
-						element: withSuspense(<SignIn />),
+						element: withPageTitle(<SignIn />, ROUTE_TITLES[ROUTES.signIn]),
 					},
 					{
 						path: ROUTES.signUp,
-						element: withSuspense(<SignUp />),
+						element: withPageTitle(<SignUp />, ROUTE_TITLES[ROUTES.signUp]),
 					},
 				],
 			},
@@ -73,27 +79,46 @@ export const router = createBrowserRouter([
 				children: [
 					{
 						path: ROUTES.root,
-						element: <Navigate to={ROUTES.people} replace />,
+						element: (
+							<PageTitle title={ROUTE_TITLES[ROUTES.people]}>
+								<Navigate to={ROUTES.people} replace />
+							</PageTitle>
+						),
 					},
 					{
 						path: ROUTES.people,
-						element: withSuspense(<PeopleConsultPage />),
+						element: withPageTitle(
+							<PeopleConsultPage />,
+							ROUTE_TITLES[ROUTES.people],
+						),
 					},
 					{
 						path: ROUTES.personRegister,
-						element: withSuspense(<PersonRegisterPage />),
+						element: withPageTitle(
+							<PersonRegisterPage />,
+							ROUTE_TITLES[ROUTES.personRegister],
+						),
 					},
 					{
 						path: ROUTES.transactions,
-						element: withSuspense(<TransactionsConsultPage />),
+						element: withPageTitle(
+							<TransactionsConsultPage />,
+							ROUTE_TITLES[ROUTES.transactions],
+						),
 					},
 					{
 						path: ROUTES.transactionRegister,
-						element: withSuspense(<TransactionRegisterPage />),
+						element: withPageTitle(
+							<TransactionRegisterPage />,
+							ROUTE_TITLES[ROUTES.transactionRegister],
+						),
 					},
 					{
 						path: ROUTES.summary,
-						element: withSuspense(<SummaryPage />),
+						element: withPageTitle(
+							<SummaryPage />,
+							ROUTE_TITLES[ROUTES.summary],
+						),
 					},
 				],
 			},
@@ -101,6 +126,6 @@ export const router = createBrowserRouter([
 	},
 	{
 		path: "*",
-		element: withSuspense(<NotFoundPage />),
+		element: withPageTitle(<NotFoundPage />, ROUTE_TITLES.notFound),
 	},
 ]);
