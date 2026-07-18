@@ -9,6 +9,7 @@ dist-ssr/
 .vite/
 .cache/
 coverage/
+test-results/
 
 # Variáveis de ambiente
 .env
