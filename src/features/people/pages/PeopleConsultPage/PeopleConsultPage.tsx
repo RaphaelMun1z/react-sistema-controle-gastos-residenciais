@@ -53,13 +53,7 @@ const PeopleConsultHeaderData = {
 };
 
 const PeopleConsultPage = () => {
-	const {
-		data: people = [],
-		error,
-		isError,
-		isLoading,
-		refetch,
-	} = usePeople();
+	const { data: people = [], error, isError, isLoading, refetch } = usePeople();
 	const errorFeedback = getApiErrorFeedback(error, "peopleList");
 	const deletePerson = useDeletePerson();
 	const [feedbackMessage, setFeedbackMessage] = useState("");
@@ -72,13 +66,12 @@ const PeopleConsultPage = () => {
 			color: "error",
 			onClick: (person) => {
 				const shouldRemove = window.confirm(
-					`Deseja excluir ${person.name}?`,
+					`Deseja excluir ${person.name}? As transações dessa pessoa também serão removidas.`,
 				);
 
 				if (shouldRemove) {
 					deletePerson.mutate(person.id, {
-						onSuccess: () =>
-							setFeedbackMessage("Pessoa excluída com sucesso."),
+						onSuccess: () => setFeedbackMessage("Pessoa excluída com sucesso."),
 						onError: (error) =>
 							setFeedbackError(getApiErrorTitle(error, "peopleDelete")),
 					});

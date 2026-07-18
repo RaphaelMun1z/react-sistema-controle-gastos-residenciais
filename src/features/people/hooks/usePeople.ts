@@ -22,8 +22,7 @@ export const useCreatePerson = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (input: CreatePersonInput) =>
-			peopleService.createPerson(input),
+		mutationFn: (input: CreatePersonInput) => peopleService.createPerson(input),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: peopleQueryKey });
 		},
@@ -34,13 +33,8 @@ export const useUpdatePerson = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({
-			id,
-			input,
-		}: {
-			id: number;
-			input: UpdatePersonInput;
-		}) => peopleService.updatePerson(id, input),
+		mutationFn: ({ id, input }: { id: number; input: UpdatePersonInput }) =>
+			peopleService.updatePerson(id, input),
 		onSuccess: (_person, variables) => {
 			void queryClient.invalidateQueries({ queryKey: peopleQueryKey });
 			void queryClient.invalidateQueries({
@@ -57,6 +51,8 @@ export const useDeletePerson = () => {
 		mutationFn: (id: number) => peopleService.deletePerson(id),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: peopleQueryKey });
+			void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+			void queryClient.invalidateQueries({ queryKey: ["summary"] });
 		},
 	});
 };
