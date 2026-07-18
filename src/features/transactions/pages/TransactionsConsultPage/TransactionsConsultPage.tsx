@@ -31,6 +31,7 @@ import {
 	getApiErrorFeedback,
 	getApiErrorTitle,
 } from "../../../../shared/api/apiError";
+import walletImage from "../../../../assets/images/wallet.png";
 
 // Cabeçalho da página
 const TransactionsConsultHeaderData = {
@@ -146,6 +147,8 @@ const TransactionsConsultPage = () => {
 					<EmptyState
 						title="Nenhuma transação encontrada."
 						description="Registre uma nova transação ou ajuste os filtros utilizados."
+						image={walletImage}
+						imageAlt="Carteira vazia"
 					/>
 				)}
 
