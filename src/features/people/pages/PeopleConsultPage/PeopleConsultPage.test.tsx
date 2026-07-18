@@ -1,11 +1,36 @@
-import { screen, waitFor } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import type { ReactElement } from "react";
+import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { API_ENDPOINTS } from "../../../../shared/api/apiEndpoints";
-import { renderWithProviders } from "../../../../test/renderWithProviders";
+import {
+	createTestQueryClient,
+	renderWithProviders,
+} from "../../../../test/renderWithProviders";
 import { server } from "../../../../test/server";
 import PeopleConsultPage from "./PeopleConsultPage";
+
+const renderWithRouteFeedback = (ui: ReactElement) => {
+	const queryClient = createTestQueryClient();
+
+	return render(
+		<QueryClientProvider client={queryClient}>
+			<MemoryRouter
+				initialEntries={[
+					{
+						pathname: "/pessoas",
+						state: { feedbackMessage: "Pessoa cadastrada com sucesso." },
+					},
+				]}
+			>
+				{ui}
+			</MemoryRouter>
+		</QueryClientProvider>,
+	);
+};
 
 describe("PeopleConsultPage", () => {
 	it("renderiza pessoas retornadas pela API", async () => {
@@ -115,5 +140,17 @@ describe("PeopleConsultPage", () => {
 		).toBeInTheDocument();
 
 		confirmSpy.mockRestore();
+	});
+
+	it("exibe feedback de sucesso recebido do cadastro de pessoa", async () => {
+		server.use(
+			http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json([])),
+		);
+
+		renderWithRouteFeedback(<PeopleConsultPage />);
+
+		expect(
+			await screen.findByText("Pessoa cadastrada com sucesso."),
+		).toBeInTheDocument();
 	});
 });

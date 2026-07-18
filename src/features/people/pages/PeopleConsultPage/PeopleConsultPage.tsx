@@ -1,22 +1,15 @@
 import "./PeopleConsultPage.scss";
 
-// Ícones do Material Icons
 import DeleteIcon from "@mui/icons-material/Delete";
-
-// Componentes do Material UI
 import Table, {
 	type TableAction,
 	type TableColumn,
 } from "../../../../shared/components/Table/Table";
 import { Alert, Button, Snackbar } from "@mui/material";
 import { PersonAdd } from "@mui/icons-material";
-import { useState } from "react";
-
-// React Router
-import { Link } from "react-router";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
-
-// Componentes Locais
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../../shared/components/DataState/EmptyState";
@@ -28,7 +21,10 @@ import {
 import { useDeletePerson, usePeople } from "../../hooks/usePeople";
 import type { Person } from "../../types/person";
 
-// Colunas da tabela de pessoas
+interface PeopleConsultLocationState {
+	feedbackMessage?: string;
+}
+
 const columns: TableColumn<Person>[] = [
 	{
 		key: "name",
@@ -53,11 +49,21 @@ const PeopleConsultHeaderData = {
 };
 
 const PeopleConsultPage = () => {
+	const location = useLocation();
+	const navigate = useNavigate();
 	const { data: people = [], error, isError, isLoading, refetch } = usePeople();
 	const errorFeedback = getApiErrorFeedback(error, "peopleList");
 	const deletePerson = useDeletePerson();
-	const [feedbackMessage, setFeedbackMessage] = useState("");
+	const routeFeedback = (location.state as PeopleConsultLocationState | null)
+		?.feedbackMessage;
+	const [feedbackMessage, setFeedbackMessage] = useState(routeFeedback ?? "");
 	const [feedbackError, setFeedbackError] = useState("");
+
+	useEffect(() => {
+		if (routeFeedback) {
+			navigate(location.pathname, { replace: true, state: null });
+		}
+	}, [location.pathname, navigate, routeFeedback]);
 
 	const actions: TableAction<Person>[] = [
 		{

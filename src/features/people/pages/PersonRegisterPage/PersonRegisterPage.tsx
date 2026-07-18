@@ -1,24 +1,14 @@
 import "./PersonRegisterPage.scss";
 
-// Componentes do Material UI
 import { Alert, Button, TextField } from "@mui/material";
-
-// Ícones do Material Icons
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
-
-// React Router
 import { Link, useNavigate } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
-
-// Componentes Locais
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-	personSchema,
-	type PersonFormData,
-} from "../../schemas/personSchema";
+import { personSchema, type PersonFormData } from "../../schemas/personSchema";
 import { useCreatePerson } from "../../hooks/usePeople";
 import { useState } from "react";
 import { getApiErrorTitle } from "../../../../shared/api/apiError";
@@ -51,7 +41,9 @@ const PersonRegisterPage = () => {
 		try {
 			setSubmitError("");
 			await createPerson.mutateAsync(data);
-			navigate(ROUTES.people);
+			navigate(ROUTES.people, {
+				state: { feedbackMessage: "Pessoa cadastrada com sucesso." },
+			});
 		} catch (error) {
 			setSubmitError(getApiErrorTitle(error, "peopleCreate"));
 		}
