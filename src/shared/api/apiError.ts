@@ -21,6 +21,7 @@ export type UiErrorContext =
 	| "transactionsCreate"
 	| "transactionsDelete"
 	| "summaryLoad"
+	| "financialAnalysis"
 	| "peopleOptionsLoad"
 	| "signIn"
 	| "signUp";
@@ -49,6 +50,7 @@ const contextTitles: Record<UiErrorContext, string> = {
 	transactionsCreate: "Não foi possível registrar a transação.",
 	transactionsDelete: "Não foi possível excluir a transação.",
 	summaryLoad: "Não foi possível carregar seu resumo financeiro.",
+	financialAnalysis: "Não foi possível concluir a análise",
 	peopleOptionsLoad: "Não foi possível carregar as pessoas cadastradas.",
 	signIn: "Não foi possível entrar agora.",
 	signUp: "Não foi possível criar sua conta.",
