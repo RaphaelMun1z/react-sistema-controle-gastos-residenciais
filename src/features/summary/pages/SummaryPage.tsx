@@ -22,6 +22,7 @@ import ErrorState from "../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../shared/components/DataState/EmptyState";
 import { getApiErrorFeedback } from "../../../shared/api/apiError";
 import SummarySkeleton from "../components/SummarySkeleton";
+import walletImage from "../../../assets/images/wallet.png";
 
 const SummaryHeaderData = {
 	sector: "Resumo",
@@ -148,6 +149,8 @@ const SummaryPage = () => {
 									<EmptyState
 										title="Ainda não há dados suficientes para gerar o resumo financeiro."
 										description="Cadastre pessoas e transações para visualizar receitas, despesas e saldo."
+										image={walletImage}
+										imageAlt="Carteira vazia"
 									/>
 								)}
 
