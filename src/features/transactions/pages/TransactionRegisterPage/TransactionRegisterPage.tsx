@@ -1,6 +1,5 @@
 import "./TransactionRegisterPage.scss";
 
-// Componentes do Material UI
 import {
 	Alert,
 	Button,
@@ -12,12 +11,8 @@ import {
 	Skeleton,
 	TextField,
 } from "@mui/material";
-
-// Ícones do Material Icons
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
-
-// Componentes Locais
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
 import { Link, useNavigate } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
@@ -88,6 +83,7 @@ const TransactionRegisterPage = () => {
 	);
 
 	useEffect(() => {
+		// A API também deve validar, mas o formulário já protege a UX contra receitas para menores.
 		if (isSelectedPersonUnderAge && selectedType === "income") {
 			setValue("type", "expense", {
 				shouldDirty: true,

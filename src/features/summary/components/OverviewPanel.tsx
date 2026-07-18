@@ -9,7 +9,11 @@ interface OverviewPanelProps {
 }
 
 const OverviewPanel = ({ summary }: OverviewPanelProps) => {
-	const totalIncome = summary.reduce((total, person) => total + person.income, 0);
+	// O total geral é derivado dos totais individuais retornados por /summary.
+	const totalIncome = summary.reduce(
+		(total, person) => total + person.income,
+		0,
+	);
 	const totalExpenses = summary.reduce(
 		(total, person) => total + person.expenses,
 		0,
@@ -17,8 +21,8 @@ const OverviewPanel = ({ summary }: OverviewPanelProps) => {
 	const totalBalance = totalIncome - totalExpenses;
 
 	return (
-		<section className="overview-section">
-			<h3>Visão Geral</h3>
+		<section className="overview-section" aria-labelledby="overview-title">
+			<h3 id="overview-title">Visão Geral</h3>
 
 			<div className="overview-items">
 				<div className="overview-item">
@@ -44,9 +48,7 @@ const OverviewPanel = ({ summary }: OverviewPanelProps) => {
 						</div>
 					</div>
 
-					<span className="expense-value">
-						{formatCurrency(totalExpenses)}
-					</span>
+					<span className="expense-value">{formatCurrency(totalExpenses)}</span>
 				</div>
 
 				<div className="overview-item">

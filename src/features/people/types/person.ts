@@ -2,6 +2,7 @@ export interface Person {
 	id: number;
 	name: string;
 	age: number;
+	// E-mail fica no cadastro de pessoa porque também será usado como credencial de autenticação.
 	email: string;
 }
 
