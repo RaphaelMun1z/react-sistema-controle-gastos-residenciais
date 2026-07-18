@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { loadEnv } from "vite";
+
+const viteEnv = loadEnv("test", process.cwd(), "VITE_");
+process.env.VITE_BYPASS_AUTH ??= viteEnv.VITE_BYPASS_AUTH;
 
 export default defineConfig({
 	testDir: "./tests/e2e",
@@ -6,6 +10,10 @@ export default defineConfig({
 		command: "npm run dev -- --host 127.0.0.1",
 		url: "http://127.0.0.1:5173",
 		reuseExistingServer: true,
+		env: {
+			...process.env,
+			...viteEnv,
+		},
 	},
 	use: {
 		baseURL: "http://127.0.0.1:5173",
@@ -14,7 +22,10 @@ export default defineConfig({
 	projects: [
 		{
 			name: "desktop",
-			use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 720 } },
+			use: {
+				...devices["Desktop Chrome"],
+				viewport: { width: 1280, height: 720 },
+			},
 		},
 		{
 			name: "tablet",
