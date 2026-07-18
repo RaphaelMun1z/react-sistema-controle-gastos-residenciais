@@ -72,10 +72,10 @@ validação, mensagens de erro e controle de submissão.
 
 ## Inspirações de design
 
-| Inspiração 01 | Inspiração 02 |
-| --- | --- |
-| ![Inspiração de design](https://cdn.dribbble.com/userupload/48074272/file/9ded7c9f0f4174a9b95de7714843bbd5.png?resize=1024x768&vertical=center) | ![Inspiração de design](https://cdn.dribbble.com/userupload/11344410/file/original-4e7176480f783d620ca109d0727a6191.png?resize=1024x768&vertical=center) |
-| Inspiração 03 | Inspiração 04 |
+| Inspiração 01                                                                                                                                            | Inspiração 02                                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ![Inspiração de design](https://cdn.dribbble.com/userupload/48074272/file/9ded7c9f0f4174a9b95de7714843bbd5.png?resize=1024x768&vertical=center)          | ![Inspiração de design](https://cdn.dribbble.com/userupload/11344410/file/original-4e7176480f783d620ca109d0727a6191.png?resize=1024x768&vertical=center) |
+| Inspiração 03                                                                                                                                            | Inspiração 04                                                                                                                                            |
 | ![Inspiração de design](https://cdn.dribbble.com/userupload/43378691/file/original-c32d272e64d0a2144e44180739d569a3.png?resize=1024x714&vertical=center) | ![Inspiração de design](https://cdn.dribbble.com/userupload/42176526/file/original-ef593d29153ba02c3b5f7f9bb9cd0387.jpg?resize=1000x750&vertical=center) |
 
 ## Bibliotecas
