@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+import { lazy, Suspense, type ReactNode } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
 import { ROUTES } from "./routes/paths";
 
@@ -8,22 +10,41 @@ import PrivateRoute from "../features/authentication/components/PrivateRoute";
 import PublicRoute from "../features/authentication/components/PublicRoute";
 
 // Páginas/componentes - Autenticação
-import SignIn from "../features/authentication/pages/SignIn/SignIn";
-import SignUp from "../features/authentication/pages/SignUp/SignUp";
+const SignIn = lazy(
+	() => import("../features/authentication/pages/SignIn/SignIn"),
+);
+const SignUp = lazy(
+	() => import("../features/authentication/pages/SignUp/SignUp"),
+);
+const PeopleConsultPage = lazy(
+	() => import("../features/people/pages/PeopleConsultPage/PeopleConsultPage"),
+);
+const PersonRegisterPage = lazy(
+	() =>
+		import("../features/people/pages/PersonRegisterPage/PersonRegisterPage"),
+);
+const TransactionRegisterPage = lazy(
+	() =>
+		import(
+			"../features/transactions/pages/TransactionRegisterPage/TransactionRegisterPage"
+		),
+);
+const TransactionsConsultPage = lazy(
+	() =>
+		import(
+			"../features/transactions/pages/TransactionsConsultPage/TransactionsConsultPage"
+		),
+);
+const SummaryPage = lazy(
+	() => import("../features/summary/pages/SummaryPage"),
+);
+const NotFoundPage = lazy(
+	() => import("../features/not-found/pages/NotFoundPage/NotFoundPage"),
+);
 
-// Páginas/componentes - Pessoas
-import PeopleConsultPage from "../features/people/pages/PeopleConsultPage/PeopleConsultPage";
-import PersonRegisterPage from "../features/people/pages/PersonRegisterPage/PersonRegisterPage";
-
-// Páginas/componentes - Transações
-import TransactionRegisterPage from "../features/transactions/pages/TransactionRegisterPage/TransactionRegisterPage";
-import TransactionsConsultPage from "../features/transactions/pages/TransactionsConsultPage/TransactionsConsultPage";
-
-// Páginas/componentes - Resumo
-import SummaryPage from "../features/summary/pages/SummaryPage";
-
-// Página não encontrada
-import NotFoundPage from "../features/not-found/pages/NotFoundPage/NotFoundPage";
+const withSuspense = (element: ReactNode) => (
+	<Suspense fallback={<div role="status">Carregando...</div>}>{element}</Suspense>
+);
 
 export const router = createBrowserRouter([
 	{
@@ -34,11 +55,11 @@ export const router = createBrowserRouter([
 				children: [
 					{
 						path: ROUTES.signIn,
-						element: <SignIn />,
+						element: withSuspense(<SignIn />),
 					},
 					{
 						path: ROUTES.signUp,
-						element: <SignUp />,
+						element: withSuspense(<SignUp />),
 					},
 				],
 			},
@@ -56,23 +77,23 @@ export const router = createBrowserRouter([
 					},
 					{
 						path: ROUTES.people,
-						element: <PeopleConsultPage />,
+						element: withSuspense(<PeopleConsultPage />),
 					},
 					{
 						path: ROUTES.personRegister,
-						element: <PersonRegisterPage />,
+						element: withSuspense(<PersonRegisterPage />),
 					},
 					{
 						path: ROUTES.transactions,
-						element: <TransactionsConsultPage />,
+						element: withSuspense(<TransactionsConsultPage />),
 					},
 					{
 						path: ROUTES.transactionRegister,
-						element: <TransactionRegisterPage />,
+						element: withSuspense(<TransactionRegisterPage />),
 					},
 					{
 						path: ROUTES.summary,
-						element: <SummaryPage />,
+						element: withSuspense(<SummaryPage />),
 					},
 				],
 			},
@@ -80,6 +101,6 @@ export const router = createBrowserRouter([
 	},
 	{
 		path: "*",
-		element: <NotFoundPage />,
+		element: withSuspense(<NotFoundPage />),
 	},
 ]);
