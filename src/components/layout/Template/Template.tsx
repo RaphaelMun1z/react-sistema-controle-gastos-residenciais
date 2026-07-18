@@ -1,7 +1,11 @@
 import React from "react";
 import "./template.scss";
+import { Outlet, useLocation, useNavigate } from "react-router";
 
-import logo from "../../assets/rm-logo-branco.png";
+// Assets
+import logo from "../../../assets/images/rm-logo-branco.png";
+
+// Componentes do Material UI
 import {
 	Avatar,
 	ListItemButton,
@@ -11,20 +15,60 @@ import {
 	Tabs,
 } from "@mui/material";
 import { deepOrange } from "@mui/material/colors";
+
+// Ícones do Material Icons
 import Groups2Icon from "@mui/icons-material/Groups2";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import PaidIcon from "@mui/icons-material/Paid";
 import LogoutIcon from "@mui/icons-material/Logout";
 
-const Template = ({ children }: any) => {
-	const [value, setValue] = React.useState("recents");
+// Itens da barra de navegação
+const navItems = [
+	{
+		value: "pessoas",
+		label: "Pessoas",
+		path: "/pessoas",
+		icon: <Groups2Icon />,
+	},
+	{
+		value: "transacoes",
+		label: "Transações",
+		path: "/transacoes",
+		icon: <ReceiptLongIcon />,
+	},
+	{
+		value: "Summary",
+		label: "Resumo",
+		path: "/Summary",
+		icon: <PaidIcon />,
+	},
+];
 
-	const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-		setValue(newValue);
+const Template = () => {
+	// Hooks responsáveis pela navegação e identificação da rota atual
+	const navigate = useNavigate();
+	const location = useLocation();
+
+	// Identifica o item da navbar correspondente à rota atual
+	const currentNavItem = navItems.find((item) =>
+		location.pathname.startsWith(item.path),
+	);
+
+	// Define qual item da navbar ficará selecionado
+	const value = currentNavItem?.value ?? "pessoas";
+
+	// Navega para a rota correspondente ao item selecionado
+	const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
+		const selectedItem = navItems.find((item) => item.value === newValue);
+
+		if (selectedItem) {
+			navigate(selectedItem.path);
+		}
 	};
 
+	// Redireciona para a página de login
 	const handleLogout = () => {
-		window.location.href = "/login";
+		navigate("/login");
 	};
 
 	return (
@@ -53,29 +97,16 @@ const Template = ({ children }: any) => {
 									onChange={handleChange}
 									className="navigation-tabs"
 								>
-									<Tab
-										value="pessoas"
-										label="Pessoas"
-										icon={<Groups2Icon />}
-										iconPosition="start"
-										className="navigation-tab"
-									/>
-
-									<Tab
-										value="transacoes"
-										label="Transações"
-										icon={<ReceiptLongIcon />}
-										iconPosition="start"
-										className="navigation-tab"
-									/>
-
-									<Tab
-										value="total"
-										label="Totais"
-										icon={<PaidIcon />}
-										iconPosition="start"
-										className="navigation-tab"
-									/>
+									{navItems.map((item) => (
+										<Tab
+											key={item.value}
+											value={item.value}
+											label={item.label}
+											icon={item.icon}
+											iconPosition="start"
+											className="navigation-tab"
+										/>
+									))}
 								</Tabs>
 							</div>
 						</nav>
@@ -120,7 +151,9 @@ const Template = ({ children }: any) => {
 					</div>
 				</aside>
 				<div className="view-page-container">
-					<div className="main-content-container">{children}</div>
+					<main className="main-content-container">
+						<Outlet />
+					</main>
 				</div>
 			</div>
 			<div className="author-container">
