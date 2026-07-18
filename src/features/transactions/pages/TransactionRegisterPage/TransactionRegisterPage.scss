@@ -1,0 +1,60 @@
+.section-container {
+	width: 100%;
+	height: 100%;
+
+	display: flex;
+	flex-direction: column;
+}
+
+.form-container {
+	width: 100%;
+	margin-top: 40px;
+}
+
+.transaction-form {
+	width: 100%;
+	max-width: 900px;
+
+	// Sem fundo, borda ou card
+	background: transparent;
+}
+
+.form-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 20px;
+}
+
+.form-observation {
+	margin-top: 20px;
+}
+
+.form-actions {
+	margin-top: 32px;
+
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+
+	gap: 12px;
+
+	button {
+		text-transform: none;
+		font-weight: 500;
+		border-radius: 8px;
+	}
+}
+
+@media (max-width: 768px) {
+	.form-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.form-actions {
+		flex-direction: column-reverse;
+
+		button {
+			width: 100%;
+		}
+	}
+}

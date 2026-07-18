@@ -12,7 +12,7 @@ import TransactionRegisterPage from "../features/transactions/pages/TransactionR
 import TransactionsConsultPage from "../features/transactions/pages/TransactionsConsultPage/TransactionsConsultPage";
 
 // Páginas/componentes - Resumo
-import SummaryPage from "../features/summary/pages/SummaryPagePage";
+import SummaryPage from "../features/summary/pages/SummaryPage";
 import NotFoundPage from "../features/not-found/pages/NotFoundPage/NotFoundPage";
 
 export const router = createBrowserRouter([
@@ -28,7 +28,7 @@ export const router = createBrowserRouter([
 				element: <PeopleConsultPage />,
 			},
 			{
-				path: "/pessoas/cadastrar",
+				path: "/pessoas/registrar",
 				element: <PersonRegisterPage />,
 			},
 			{
@@ -36,7 +36,7 @@ export const router = createBrowserRouter([
 				element: <TransactionsConsultPage />,
 			},
 			{
-				path: "/transacoes/cadastrar",
+				path: "/transacoes/registrar",
 				element: <TransactionRegisterPage />,
 			},
 			{
