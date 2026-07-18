@@ -10,4 +10,5 @@ export const API_ENDPOINTS = {
 	transactions: "/transactions",
 	transactionById: (id: number) => `/transactions/${id}`,
 	summary: "/summary",
+	summaryAnalysis: "/summary/analysis",
 } as const;
