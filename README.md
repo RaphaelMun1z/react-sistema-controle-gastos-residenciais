@@ -47,7 +47,7 @@ src/
 
 ## Funcionalidades
 
-- Autenticação mockada com persistência temporária de sessão.
+- Autenticação preparada para API REST com sessão via cookies.
 - Rotas públicas e privadas.
 - Cadastro e consulta de pessoas.
 - Cadastro e consulta de transações.
@@ -67,7 +67,8 @@ validação, mensagens de erro e controle de submissão.
 
 - Context API é utilizada para autenticação e estado global relacionado à sessão.
 - TanStack Query é utilizado para dados assíncronos, cache, mutations e invalidação.
-- Os dados ainda estão isolados em services mockados enquanto a integração com uma API REST real não é implementada.
+- Os dados são consumidos por services preparados para uma API REST real.
+- Sem backend compatível em execução, a aplicação exibe estados de indisponibilidade de forma controlada.
 
 ## Inspirações de design
 
@@ -116,3 +117,33 @@ npm run build
 npm install
 npm run dev
 ```
+
+Outros comandos disponíveis:
+
+```bash
+npm run build
+npm run lint
+npm test
+npm run test:e2e
+npm run preview
+```
+
+## Variáveis de ambiente
+
+A URL da API REST é configurada pela variável `VITE_API_URL`.
+
+```env
+VITE_API_URL=http://localhost:8080/api
+```
+
+Use o arquivo `.env.example` como referência. Não inclua segredos no frontend.
+
+## Integração com backend
+
+O frontend está preparado para consumir endpoints REST de autenticação, pessoas, transações e resumo financeiro. Atualmente é necessário executar um backend compatível para obter dados reais.
+
+Quando a API não está disponível, as telas exibem mensagens amigáveis de erro e ação para tentar novamente, sem utilizar mocks de runtime.
+
+## Status atual
+
+O projeto ainda está em desenvolvimento e preparado para futura integração com uma API REST real compatível com os endpoints configurados na camada de services.
