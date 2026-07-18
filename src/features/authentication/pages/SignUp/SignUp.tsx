@@ -21,7 +21,7 @@ import {
 } from "../../schemas/authSchemas";
 import { useAuth } from "../../hooks/useAuth";
 import { useState } from "react";
-import { getApiErrorMessage } from "../../../../shared/api/apiError";
+import { getApiErrorTitle } from "../../../../shared/api/apiError";
 
 const SignUp = () => {
 	const navigate = useNavigate();
@@ -47,7 +47,7 @@ const SignUp = () => {
 			await signUp(data);
 			navigate(ROUTES.people);
 		} catch (error) {
-			setSubmitError(getApiErrorMessage(error));
+			setSubmitError(getApiErrorTitle(error, "signUp"));
 		}
 	};
 

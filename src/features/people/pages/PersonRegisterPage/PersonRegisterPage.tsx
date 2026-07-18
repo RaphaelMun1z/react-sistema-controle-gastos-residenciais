@@ -21,7 +21,7 @@ import {
 } from "../../schemas/personSchema";
 import { useCreatePerson } from "../../hooks/usePeople";
 import { useState } from "react";
-import { getApiErrorMessage } from "../../../../shared/api/apiError";
+import { getApiErrorTitle } from "../../../../shared/api/apiError";
 
 const PersonRegisterHeaderData = {
 	sector: "Pessoas",
@@ -53,7 +53,7 @@ const PersonRegisterPage = () => {
 			await createPerson.mutateAsync(data);
 			navigate(ROUTES.people);
 		} catch (error) {
-			setSubmitError(getApiErrorMessage(error));
+			setSubmitError(getApiErrorTitle(error, "peopleCreate"));
 		}
 	};
 

@@ -57,7 +57,7 @@ describe("PersonRegisterPage", () => {
 		await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
 
 		expect(
-			await screen.findByText("Já existe um registro com essas informações."),
+			await screen.findByText("Já existe uma pessoa cadastrada com esse e-mail."),
 		).toBeInTheDocument();
 	});
 });

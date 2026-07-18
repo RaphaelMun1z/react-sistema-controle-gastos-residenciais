@@ -20,17 +20,23 @@ test("permite navegar em rotas privadas quando bypass está ligado", async ({
 
 	await page.goto("/pessoas");
 	await expect(
-		page.getByRole("heading", { name: "Não foi possível carregar as pessoas" }),
+		page.getByRole("heading", {
+			name: "Não foi possível carregar as pessoas cadastradas.",
+		}),
 	).toBeVisible({ timeout: 25000 });
 
 	await page.goto("/transacoes");
 	await expect(
-		page.getByRole("heading", { name: "Não foi possível carregar as transações" }),
+		page.getByRole("heading", {
+			name: "Não foi possível carregar suas transações.",
+		}),
 	).toBeVisible({ timeout: 25000 });
 
 	await page.goto("/resumo");
 	await expect(
-		page.getByRole("heading", { name: "Não foi possível carregar o resumo financeiro" }),
+		page.getByRole("heading", {
+			name: "Não foi possível carregar seu resumo financeiro.",
+		}),
 	).toBeVisible({ timeout: 25000 });
 });
 

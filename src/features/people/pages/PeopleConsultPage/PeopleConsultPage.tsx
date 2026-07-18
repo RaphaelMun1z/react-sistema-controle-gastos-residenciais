@@ -21,7 +21,10 @@ import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../../shared/components/DataState/EmptyState";
 import TableSkeleton from "../../../../shared/components/skeletons/TableSkeleton";
-import { getApiErrorMessage } from "../../../../shared/api/apiError";
+import {
+	getApiErrorFeedback,
+	getApiErrorTitle,
+} from "../../../../shared/api/apiError";
 import { useDeletePerson, usePeople } from "../../hooks/usePeople";
 import type { Person } from "../../types/person";
 
@@ -57,6 +60,7 @@ const PeopleConsultPage = () => {
 		isLoading,
 		refetch,
 	} = usePeople();
+	const errorFeedback = getApiErrorFeedback(error, "peopleList");
 	const deletePerson = useDeletePerson();
 	const [feedbackMessage, setFeedbackMessage] = useState("");
 	const [feedbackError, setFeedbackError] = useState("");
@@ -76,7 +80,7 @@ const PeopleConsultPage = () => {
 						onSuccess: () =>
 							setFeedbackMessage("Pessoa excluída com sucesso."),
 						onError: (error) =>
-							setFeedbackError(getApiErrorMessage(error)),
+							setFeedbackError(getApiErrorTitle(error, "peopleDelete")),
 					});
 				}
 			},
@@ -103,8 +107,9 @@ const PeopleConsultPage = () => {
 
 				{isError && (
 					<ErrorState
-						title="Não foi possível carregar as pessoas"
-						description={getApiErrorMessage(error)}
+						title={errorFeedback.title}
+						description={errorFeedback.description}
+						actionLabel={errorFeedback.actionLabel}
 						onRetry={() => void refetch()}
 					/>
 				)}

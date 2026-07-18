@@ -102,7 +102,7 @@ const Template = () => {
 					{user?.name.charAt(0).toUpperCase() ?? "U"}
 				</Avatar>
 				<h2>{user?.name ?? "Usuário"}</h2>
-				<p>{user?.email ?? "API indisponível"}</p>
+				<p>{user?.email ?? "Modo de testes"}</p>
 			</header>
 			<nav className="navbar-container" aria-label="Navegação principal">
 				<div className="links-container">

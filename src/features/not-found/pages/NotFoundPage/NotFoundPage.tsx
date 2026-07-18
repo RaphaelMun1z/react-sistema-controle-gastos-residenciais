@@ -1,30 +1,26 @@
-import { Button } from "@mui/material";
 import "./NotFoundPage.scss";
 import notFoundImage from "../../../../assets/images/notFoundImage.png";
 import { useNavigate } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
+import FeedbackState from "../../../../shared/components/FeedbackState/FeedbackState";
 
 const NotFoundPage = () => {
 	const navigate = useNavigate();
 
 	return (
 		<main className="main-container">
-			<div className="not-found-container">
-				<h1>404</h1>
-				<p>Página não encontrada.</p>
-			</div>
-			<img
-				className="not-found-image"
-				src={notFoundImage}
-				alt="Imagem - Página não encontrada"
+			<FeedbackState
+				eyebrow="404"
+				title="Página não encontrada."
+				description="Não encontramos a página que você tentou acessar."
+				image={notFoundImage}
+				imageAlt="Imagem - Página não encontrada"
+				primaryAction={{
+					label: "Ir para Resumo",
+					onClick: () => navigate(ROUTES.summary),
+				}}
+				className="not-found-state"
 			/>
-			<Button
-				className="not-found-button"
-				variant="outlined"
-				onClick={() => navigate(ROUTES.summary)}
-			>
-				Ir para Resumo
-			</Button>
 		</main>
 	);
 };

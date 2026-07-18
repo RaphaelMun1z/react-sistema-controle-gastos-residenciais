@@ -13,7 +13,7 @@ import { usePeople } from "../../people/hooks/usePeople";
 import type { SummaryFilters as SummaryFiltersValue } from "../types/summary";
 import ErrorState from "../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../shared/components/DataState/EmptyState";
-import { getApiErrorMessage } from "../../../shared/api/apiError";
+import { getApiErrorFeedback } from "../../../shared/api/apiError";
 import SummarySkeleton from "../components/SummarySkeleton";
 
 const SummaryHeaderData = {
@@ -40,6 +40,7 @@ const SummaryPage = () => {
 		isFetching,
 		isError,
 	} = useSummary(filters);
+	const errorFeedback = getApiErrorFeedback(error, "summaryLoad");
 
 	const shouldShowInitialSkeleton = isLoading && summary.length === 0;
 
@@ -69,8 +70,9 @@ const SummaryPage = () => {
 							<div className="summary-container">
 								{isError && (
 									<ErrorState
-										title="Não foi possível carregar o resumo financeiro"
-										description={getApiErrorMessage(error)}
+										title={errorFeedback.title}
+										description={errorFeedback.description}
+										actionLabel={errorFeedback.actionLabel}
 										onRetry={() => void refetch()}
 									/>
 								)}

@@ -60,8 +60,10 @@ describe("PeopleConsultPage", () => {
 		renderWithProviders(<PeopleConsultPage />);
 
 		expect(
-			await screen.findByText("Não foi possível carregar as pessoas"),
+			await screen.findByText("Não foi possível carregar as pessoas cadastradas."),
 		).toBeInTheDocument();
+		expect(screen.getByText("Tente novamente em alguns instantes.")).toBeInTheDocument();
+		expect(screen.getByAltText("Ilustração de erro")).toBeInTheDocument();
 
 		await userEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
 

@@ -31,7 +31,10 @@ import { useCreateTransaction } from "../../hooks/useTransactions";
 import { usePeople } from "../../../people/hooks/usePeople";
 import { useState } from "react";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
-import { getApiErrorMessage } from "../../../../shared/api/apiError";
+import {
+	getApiErrorFeedback,
+	getApiErrorTitle,
+} from "../../../../shared/api/apiError";
 
 const TransactionsRegisterHeaderData = {
 	sector: "Transações",
@@ -50,6 +53,7 @@ const TransactionRegisterPage = () => {
 		isLoading: isPeopleLoading,
 		refetch: refetchPeople,
 	} = usePeople();
+	const peopleErrorFeedback = getApiErrorFeedback(peopleError, "peopleOptionsLoad");
 	const [submitError, setSubmitError] = useState("");
 	const {
 		control,
@@ -75,7 +79,7 @@ const TransactionRegisterPage = () => {
 			await createTransaction.mutateAsync(data);
 			navigate(ROUTES.transactions);
 		} catch (error) {
-			setSubmitError(getApiErrorMessage(error));
+			setSubmitError(getApiErrorTitle(error, "transactionsCreate"));
 		}
 	};
 
@@ -86,12 +90,14 @@ const TransactionRegisterPage = () => {
 			<div className="transaction-register-page__form-container">
 				{isPeopleError && (
 					<ErrorState
-						title="Não foi possível carregar as pessoas"
-						description={getApiErrorMessage(peopleError)}
+						title={peopleErrorFeedback.title}
+						description={peopleErrorFeedback.description}
+						actionLabel={peopleErrorFeedback.actionLabel}
 						onRetry={() => void refetchPeople()}
 					/>
 				)}
 
+				{!isPeopleError && (
 				<form className="transaction-form" onSubmit={handleSubmit(onSubmit)}>
 					{submitError && <Alert severity="error">{submitError}</Alert>}
 
@@ -285,6 +291,7 @@ const TransactionRegisterPage = () => {
 						</Button>
 					</div>
 				</form>
+				)}
 			</div>
 		</section>
 	);

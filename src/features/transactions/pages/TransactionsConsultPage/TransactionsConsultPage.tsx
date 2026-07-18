@@ -27,7 +27,10 @@ import { transactionTypeLabels } from "../../utils/transactionLabels";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../../shared/components/DataState/EmptyState";
 import TableSkeleton from "../../../../shared/components/skeletons/TableSkeleton";
-import { getApiErrorMessage } from "../../../../shared/api/apiError";
+import {
+	getApiErrorFeedback,
+	getApiErrorTitle,
+} from "../../../../shared/api/apiError";
 
 // Cabeçalho da página
 const TransactionsConsultHeaderData = {
@@ -85,6 +88,7 @@ const TransactionsConsultPage = () => {
 		isLoading,
 		refetch,
 	} = useTransactions();
+	const errorFeedback = getApiErrorFeedback(error, "transactionsList");
 	const deleteTransaction = useDeleteTransaction();
 	const [feedbackMessage, setFeedbackMessage] = useState("");
 	const [feedbackError, setFeedbackError] = useState("");
@@ -104,7 +108,7 @@ const TransactionsConsultPage = () => {
 						onSuccess: () =>
 							setFeedbackMessage("Transação excluída com sucesso."),
 						onError: (error) =>
-							setFeedbackError(getApiErrorMessage(error)),
+							setFeedbackError(getApiErrorTitle(error, "transactionsDelete")),
 					});
 				}
 			},
@@ -131,8 +135,9 @@ const TransactionsConsultPage = () => {
 
 				{isError && (
 					<ErrorState
-						title="Não foi possível carregar as transações"
-						description={getApiErrorMessage(error)}
+						title={errorFeedback.title}
+						description={errorFeedback.description}
+						actionLabel={errorFeedback.actionLabel}
 						onRetry={() => void refetch()}
 					/>
 				)}
