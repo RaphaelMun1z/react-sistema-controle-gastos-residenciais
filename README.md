@@ -1,6 +1,6 @@
 # Sistema de Controle de Gastos Residenciais
 
-![Versão](https://img.shields.io/github/v/tag/RaphaelMun1z/NOME_DO_REPOSITORIO?include_prereleases&sort=semver&label=vers%C3%A3o)
+![Versão](https://img.shields.io/github/v/tag/RaphaelMun1z/react-sistema-controle-gastos-residenciais?include_prereleases&sort=semver&label=vers%C3%A3o)
 
 ![React](https://img.shields.io/badge/React-19.2.7-61DAFB?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6.0.2-3178C6?logo=typescript&logoColor=white)
