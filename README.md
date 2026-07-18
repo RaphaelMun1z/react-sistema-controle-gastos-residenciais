@@ -21,5 +21,5 @@
 
 ## Bibliotecas
 
-### Material UI
-Optei por utilizar uma biblioteca de componentes para acelerar o processo de desenvolvimento, aproveitando recursos de qualidade, responsivos, testados e visualmente agradáveis ao usuário.
+### Material UI e Material Icons
+Optei por utilizar uma biblioteca de componentes e ícones para acelerar o processo de desenvolvimento, aproveitando recursos de qualidade, responsivos, testados e visualmente agradáveis ao usuário.

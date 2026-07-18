@@ -1,0 +1,151 @@
+.base-container {
+	width: 100%;
+	min-height: 100vh;
+	background: linear-gradient(135deg, #310026 0%, #3a062f 50%, #430c38 100%);
+	padding: 15px 0;
+
+	.template-container {
+		position: relative;
+		display: flex;
+		width: 100%;
+		height: 100vh;
+
+		.aside-container {
+			position: relative;
+			display: flex;
+			width: 30%;
+			height: 100%;
+			padding: 60px;
+
+			.aside-content-container {
+				position: relative;
+				display: flex;
+				flex-wrap: wrap;
+				flex-direction: column;
+				justify-content: space-between;
+				width: 100%;
+				height: 100%;
+
+				.aside-header-container {
+					position: relative;
+					display: flex;
+					flex-wrap: wrap;
+					flex-direction: column;
+					width: 100%;
+					height: 25%;
+					color: #fff;
+					padding-left: 16px;
+
+					h2 {
+						margin-top: 5px;
+						font-weight: 600;
+					}
+
+					p {
+						color: grey;
+						font-weight: 300;
+					}
+				}
+
+				.navbar-container {
+					position: relative;
+					display: flex;
+					width: 100%;
+					height: 65%;
+					justify-content: flex-start;
+					align-items: flex-start;
+					padding: 20px 0;
+
+					.links-container {
+						position: relative;
+						display: flex;
+						width: 100%;
+						height: fit-content;
+						justify-content: flex-start;
+
+						.navigation-tabs {
+							width: 100%;
+
+							.MuiTabs-indicator {
+								display: none;
+							}
+						}
+
+						.navigation-tab {
+							justify-content: flex-start;
+							text-align: left;
+							color: rgba(255, 255, 255, 0.55);
+							background-color: transparent;
+							font-size: 1.1rem;
+
+							&.Mui-selected {
+								color: #fff;
+								background-color: transparent;
+							}
+
+							&:hover {
+								color: rgba(255, 255, 255, 0.8);
+								background-color: rgba(255, 255, 255, 0.05);
+							}
+
+							&.Mui-selected:hover {
+								color: #fff;
+							}
+
+							.MuiSvgIcon-root {
+								color: inherit;
+								font-size: 1.8rem;
+							}
+						}
+					}
+				}
+
+				.footer-container {
+					position: relative;
+					display: flex;
+					width: 10%;
+					height: fit-content;
+					padding-left: 16px;
+				}
+			}
+		}
+
+		.view-page-container {
+			position: relative;
+			display: flex;
+			width: 70%;
+			height: 100%;
+			border-radius: 50px 0 0 50px;
+			background-color: whitesmoke;
+			padding: 60px 30px 60px 80px;
+
+			.main-content-container {
+				position: relative;
+				display: flex;
+				width: 100%;
+				height: 100%;
+				background-color: gray;
+			}
+		}
+	}
+
+	.author-container {
+		position: relative;
+		display: flex;
+		width: 100%;
+		height: fit-content;
+		justify-content: center;
+		align-items: center;
+		gap: 10px;
+		padding: 20px 10px 10px 10px;
+
+		h2 {
+			margin-top: 5px;
+		}
+
+		p {
+			color: #fff;
+			font-size: 15pt;
+		}
+	}
+}
