@@ -6,6 +6,7 @@ import PageHeader from "../../../components/PageHeader/PageHeader";
 
 // Componentes do Material UI
 import {
+	Avatar,
 	Button,
 	FormControl,
 	InputLabel,
@@ -21,6 +22,7 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { deepOrange } from "@mui/material/colors";
 
 // Interfaces
 interface PersonSummary {
@@ -34,7 +36,7 @@ interface PersonSummary {
 // Cabeçalho da página
 const SummaryHeaderData = {
 	sector: "Resumo",
-	sectorPath: "/summary",
+	sectorPath: "/resumo",
 	currentPage: "Consultar",
 	title: "Resumo Financeiro",
 };
@@ -192,6 +194,16 @@ const SummaryPage = () => {
 						{filteredPeople.map((person) => (
 							<article key={person.id} className="person-summary">
 								<header className="person-summary-header">
+									<Avatar
+										sx={{
+											width: 30,
+											height: 30,
+											bgcolor: deepOrange[500],
+											fontSize: "0.75rem",
+										}}
+									>
+										{person.name.charAt(0)}
+									</Avatar>
 									<h2>{person.name}</h2>
 								</header>
 

@@ -105,6 +105,10 @@
 }
 
 .person-summary-header {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
 	padding-bottom: 10px;
 	margin-bottom: 6px;
 

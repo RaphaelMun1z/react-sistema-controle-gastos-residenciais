@@ -1,7 +1,12 @@
 import { createBrowserRouter, Navigate } from "react-router";
 
-// Componente Template
+// Componentes Template
 import Template from "../components/layout/Template/Template";
+import AuthTemplate from "../components/layout/AuthTemplate/AuthTemplate";
+
+// Páginas/componentes - Autenticação
+import SignIn from "../features/authentication/pages/SignIn/SignIn";
+import SignUp from "../features/authentication/pages/SignUp/SignUp";
 
 // Páginas/componentes - Pessoas
 import PeopleConsultPage from "../features/people/pages/PeopleConsultPage/PeopleConsultPage";
@@ -13,9 +18,24 @@ import TransactionsConsultPage from "../features/transactions/pages/Transactions
 
 // Páginas/componentes - Resumo
 import SummaryPage from "../features/summary/pages/SummaryPage";
+
+// Página não encontrada
 import NotFoundPage from "../features/not-found/pages/NotFoundPage/NotFoundPage";
 
 export const router = createBrowserRouter([
+	{
+		element: <AuthTemplate />,
+		children: [
+			{
+				path: "/entrar",
+				element: <SignIn />,
+			},
+			{
+				path: "/cadastrar",
+				element: <SignUp />,
+			},
+		],
+	},
 	{
 		element: <Template />,
 		children: [
@@ -43,10 +63,10 @@ export const router = createBrowserRouter([
 				path: "/summary",
 				element: <SummaryPage />,
 			},
-			{
-				path: "*",
-				element: <NotFoundPage />,
-			},
 		],
+	},
+	{
+		path: "*",
+		element: <NotFoundPage />,
 	},
 ]);

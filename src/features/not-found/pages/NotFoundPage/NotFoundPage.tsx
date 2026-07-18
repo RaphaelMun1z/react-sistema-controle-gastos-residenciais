@@ -20,7 +20,7 @@ const NotFoundPage = () => {
 			<Button
 				className="not-found-button"
 				variant="outlined"
-				onClick={() => navigate("/summary")}
+				onClick={() => navigate("/resumo")}
 			>
 				Ir para Resumo
 			</Button>

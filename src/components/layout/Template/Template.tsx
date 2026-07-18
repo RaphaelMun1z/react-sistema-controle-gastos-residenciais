@@ -39,7 +39,7 @@ const navItems = [
 	{
 		value: "Summary",
 		label: "Resumo",
-		path: "/summary",
+		path: "/resumo",
 		icon: <PaidIcon />,
 	},
 ];
