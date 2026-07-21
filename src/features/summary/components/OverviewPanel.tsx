@@ -9,7 +9,7 @@ interface OverviewPanelProps {
 }
 
 const OverviewPanel = ({ summary }: OverviewPanelProps) => {
-	// O total geral é derivado dos totais individuais retornados por /summary.
+	// O total geral é derivado dos totais individuais agregados no frontend.
 	const totalIncome = summary.reduce(
 		(total, person) => total + person.income,
 		0,

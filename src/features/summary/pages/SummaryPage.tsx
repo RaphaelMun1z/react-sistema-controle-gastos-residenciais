@@ -110,15 +110,8 @@ const SummaryPage = () => {
 
 					<FinancialAnalysisDialog
 						open={isAnalysisOpen}
-						isPending={false}
-						isError={false}
-						isInsufficientData={false}
-						isUnavailable
 						context={analysisContext}
-						request={{}}
 						onClose={() => setIsAnalysisOpen(false)}
-						onAnalyze={() => undefined}
-						onRetry={() => undefined}
 					/>
 				</>
 			)}
