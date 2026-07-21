@@ -56,7 +56,7 @@ const Template = () => {
 	// Hooks responsáveis pela navegação e identificação da rota atual
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { signOut, user } = useAuth();
+	const { signOut } = useAuth();
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -99,10 +99,10 @@ const Template = () => {
 						bgcolor: deepOrange[500],
 					}}
 				>
-					{user?.name.charAt(0).toUpperCase() ?? "U"}
+					U
 				</Avatar>
-				<h2>{user?.name ?? "Usuário"}</h2>
-				<p>{user?.email ?? "Modo de testes"}</p>
+				<h2>Usuário</h2>
+				<p>Sessão autenticada</p>
 			</header>
 			<nav className="navbar-container" aria-label="Navegação principal">
 				<div className="links-container">

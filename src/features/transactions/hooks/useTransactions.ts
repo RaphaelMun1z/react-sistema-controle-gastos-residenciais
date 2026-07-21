@@ -1,26 +1,31 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { PaginationParams } from "../../../shared/api/apiTypes";
 import { transactionsService } from "../services/transactionsService";
-import type {
-	CreateTransactionInput,
-	TransactionFilters,
-	UpdateTransactionInput,
-} from "../types/transaction";
+import type { CreateTransactionInput } from "../types/transaction";
 
 export const transactionsQueryKey = ["transactions"] as const;
-export const transactionQueryKey = (id: number) =>
+export const allTransactionsQueryKey = ["transactions", "all"] as const;
+export const transactionQueryKey = (id: string) =>
 	["transactions", id] as const;
 
-export const useTransactions = (filters?: TransactionFilters) =>
+export const useTransactions = (params: PaginationParams) =>
 	useQuery({
-		queryKey: [...transactionsQueryKey, filters] as const,
-		queryFn: () => transactionsService.getTransactions(filters),
+		queryKey: [...transactionsQueryKey, params.page, params.pageSize] as const,
+		queryFn: () => transactionsService.getTransactions(params),
+		placeholderData: keepPreviousData,
 	});
 
-export const useTransaction = (id: number) =>
+export const useAllTransactions = () =>
+	useQuery({
+		queryKey: allTransactionsQueryKey,
+		queryFn: () => transactionsService.getAllTransactions(),
+	});
+
+export const useTransaction = (id: string) =>
 	useQuery({
 		queryKey: transactionQueryKey(id),
 		queryFn: () => transactionsService.getTransactionById(id),
-		enabled: id > 0,
+		enabled: id.length > 0,
 	});
 
 export const useCreateTransaction = () => {
@@ -31,42 +36,8 @@ export const useCreateTransaction = () => {
 			transactionsService.createTransaction(input),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: transactionsQueryKey });
+			void queryClient.invalidateQueries({ queryKey: allTransactionsQueryKey });
 			void queryClient.invalidateQueries({ queryKey: ["summary"] });
 		},
 	});
 };
-
-export const useUpdateTransaction = () => {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: ({
-			id,
-			input,
-		}: {
-			id: number;
-			input: UpdateTransactionInput;
-		}) => transactionsService.updateTransaction(id, input),
-		onSuccess: (_transaction, variables) => {
-			void queryClient.invalidateQueries({ queryKey: transactionsQueryKey });
-			void queryClient.invalidateQueries({
-				queryKey: transactionQueryKey(variables.id),
-			});
-			void queryClient.invalidateQueries({ queryKey: ["summary"] });
-		},
-	});
-};
-
-export const useDeleteTransaction = () => {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (id: number) => transactionsService.deleteTransaction(id),
-		onSuccess: () => {
-			void queryClient.invalidateQueries({ queryKey: transactionsQueryKey });
-			void queryClient.invalidateQueries({ queryKey: ["summary"] });
-		},
-	});
-};
-
-export const useRemoveTransaction = useDeleteTransaction;

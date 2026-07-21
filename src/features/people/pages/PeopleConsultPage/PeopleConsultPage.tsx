@@ -5,7 +5,7 @@ import Table, {
 	type TableAction,
 	type TableColumn,
 } from "../../../../shared/components/Table/Table";
-import { Alert, Button, Snackbar } from "@mui/material";
+import { Alert, Button, Pagination, Snackbar } from "@mui/material";
 import { PersonAdd } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
@@ -31,8 +31,12 @@ const columns: TableColumn<Person>[] = [
 		label: "Nome",
 	},
 	{
-		key: "email",
-		label: "E-mail",
+		key: "birthDate",
+		label: "Nascimento",
+		render: (person) =>
+			new Intl.DateTimeFormat("pt-BR").format(
+				new Date(`${person.birthDate}T00:00:00`),
+			),
 	},
 	{
 		key: "age",
@@ -51,7 +55,17 @@ const PeopleConsultHeaderData = {
 const PeopleConsultPage = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
-	const { data: people = [], error, isError, isLoading, refetch } = usePeople();
+	const [page, setPage] = useState(1);
+	const pageSize = 10;
+	const {
+		data,
+		error,
+		isError,
+		isLoading,
+		isFetching,
+		refetch,
+	} = usePeople({ page, pageSize });
+	const people = data?.content ?? [];
 	const errorFeedback = getApiErrorFeedback(error, "peopleList");
 	const deletePerson = useDeletePerson();
 	const routeFeedback = (location.state as PeopleConsultLocationState | null)
@@ -121,12 +135,27 @@ const PeopleConsultPage = () => {
 				)}
 
 				{!isLoading && !isError && people.length > 0 && (
-					<Table
-						columns={columns}
-						rows={people}
-						getRowId={(person) => person.id}
-						actions={actions}
-					/>
+					<>
+						<span className="people-consult-page__total">
+							{data?.totalElements ?? 0} pessoas cadastradas
+							{isFetching ? " - atualizando..." : ""}
+						</span>
+						<Table
+							columns={columns}
+							rows={people}
+							getRowId={(person) => person.id}
+							actions={actions}
+						/>
+						{(data?.totalPages ?? 0) > 1 && (
+							<Pagination
+								className="people-consult-page__pagination"
+								page={page}
+								count={data?.totalPages ?? 1}
+								onChange={(_event, nextPage) => setPage(nextPage)}
+								color="primary"
+							/>
+						)}
+					</>
 				)}
 			</div>
 

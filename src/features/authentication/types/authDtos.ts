@@ -9,25 +9,33 @@ export type SignInRequestDTO = SignInCredentials;
 export type SignUpRequestDTO = Omit<SignUpData, "confirmPassword">;
 
 export interface AuthUserResponseDTO {
-	id: string;
+	accountId: string;
+	personId: string;
 	name: string;
+	birthDate: string;
+	age: number;
 	email: string;
 }
 
 export interface AuthSessionResponseDTO {
-	user: AuthUserResponseDTO;
+	accessToken: string;
+	expiresAt: string;
 }
 
 export const mapUserResponseToUser = (
 	user: AuthUserResponseDTO,
 ): AuthUser => ({
-	id: user.id,
+	accountId: user.accountId,
+	personId: user.personId,
 	name: user.name,
+	birthDate: user.birthDate,
+	age: user.age,
 	email: user.email,
 });
 
 export const mapSessionResponseToSession = (
 	session: AuthSessionResponseDTO,
 ): AuthSession => ({
-	user: mapUserResponseToUser(session.user),
+	accessToken: session.accessToken,
+	expiresAt: session.expiresAt,
 });

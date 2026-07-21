@@ -8,6 +8,10 @@ export const signInSchema = z.object({
 export const signUpSchema = z
 	.object({
 		name: z.string().min(1, "Informe seu nome."),
+		birthDate: z
+			.string()
+			.min(1, "Informe sua data de nascimento.")
+			.regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida."),
 		email: z.email("Informe um e-mail válido."),
 		password: z
 			.string()

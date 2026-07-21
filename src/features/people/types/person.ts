@@ -1,15 +1,11 @@
 export interface Person {
-	id: number;
+	id: string;
 	name: string;
+	birthDate: string;
 	age: number;
-	// E-mail fica no cadastro de pessoa porque também será usado como credencial de autenticação.
-	email: string;
 }
 
 export interface CreatePersonInput {
 	name: string;
-	email: string;
-	age: number;
+	birthDate: string;
 }
-
-export type UpdatePersonInput = Partial<CreatePersonInput>;

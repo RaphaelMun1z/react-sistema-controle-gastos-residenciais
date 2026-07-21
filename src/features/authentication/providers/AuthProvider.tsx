@@ -5,87 +5,103 @@ import {
 	useState,
 	type ReactNode,
 } from "react";
-import { createApiError } from "../../../shared/api/apiError";
 import { env } from "../../../shared/config/env";
 import { authenticationService } from "../services/authenticationService";
-import type { AuthUser, SignInCredentials, SignUpData } from "../types/auth";
+import type { SignInCredentials, SignUpData } from "../types/auth";
 import { AuthContext, type AuthContextValue } from "../contexts/AuthContext";
+import { authTokenStorage } from "../../../shared/api/authTokenStorage";
+import { setUnauthorizedHandler } from "../../../shared/api/httpClient";
 
 interface AuthProviderProps {
 	children: ReactNode;
 }
 
+interface AuthState {
+	sessionExpiresAt: string | null;
+	sessionMessage: string;
+}
+
+const getInitialAuthState = (): AuthState => {
+	if (env.bypassAuth) {
+		return {
+			sessionExpiresAt: null,
+			sessionMessage: "",
+		};
+	}
+
+	const storedToken = authTokenStorage.get();
+
+	if (!storedToken) {
+		return {
+			sessionExpiresAt: null,
+			sessionMessage: "",
+		};
+	}
+
+	if (authTokenStorage.isExpired(storedToken)) {
+		authTokenStorage.clear();
+
+		return {
+			sessionExpiresAt: null,
+			sessionMessage: "Sua sessão expirou. Entre novamente para continuar.",
+		};
+	}
+
+	return {
+		sessionExpiresAt: storedToken.expiresAt,
+		sessionMessage: "",
+	};
+};
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-	const [user, setUser] = useState<AuthUser | null>(null);
-	const [isLoading, setIsLoading] = useState(!env.bypassAuth);
-	const [isAuthUnavailable, setIsAuthUnavailable] = useState(false);
+	const [authState, setAuthState] = useState(getInitialAuthState);
+
+	const signOut = useCallback((message = "") => {
+		authTokenStorage.clear();
+		setAuthState({
+			sessionExpiresAt: null,
+			sessionMessage: message,
+		});
+	}, []);
 
 	useEffect(() => {
-		if (env.bypassAuth) {
-			return;
-		}
-
-		let isMounted = true;
-
-		const loadCurrentUser = async () => {
-			try {
-				const currentUser = await authenticationService.getCurrentUser();
-
-				if (isMounted) {
-					setUser(currentUser);
-					setIsAuthUnavailable(false);
-				}
-			} catch (error) {
-				const apiError = createApiError(error);
-
-				if (isMounted) {
-					setUser(null);
-					setIsAuthUnavailable(
-						apiError.type === "network" || apiError.type === "timeout",
-					);
-				}
-			} finally {
-				if (isMounted) {
-					setIsLoading(false);
-				}
-			}
-		};
-
-		void loadCurrentUser();
+		setUnauthorizedHandler(() => {
+			signOut("Sua sessão expirou. Entre novamente para continuar.");
+		});
 
 		return () => {
-			isMounted = false;
+			setUnauthorizedHandler(null);
 		};
-	}, []);
+	}, [signOut]);
 
 	const signIn = useCallback(async (credentials: SignInCredentials) => {
 		const nextSession = await authenticationService.signIn(credentials);
-		setUser(nextSession.user);
-		setIsAuthUnavailable(false);
+		authTokenStorage.set(nextSession);
+		setAuthState({
+			sessionExpiresAt: nextSession.expiresAt,
+			sessionMessage: "",
+		});
 	}, []);
 
 	const signUp = useCallback(async (data: SignUpData) => {
-		const nextSession = await authenticationService.signUp(data);
-		setUser(nextSession.user);
-		setIsAuthUnavailable(false);
-	}, []);
-
-	const signOut = useCallback(async () => {
-		await authenticationService.signOut();
-		setUser(null);
+		await authenticationService.signUp(data);
+		setAuthState((currentState) => ({
+			...currentState,
+			sessionMessage: "Conta criada com sucesso. Entre para continuar.",
+		}));
 	}, []);
 
 	const value = useMemo<AuthContextValue>(
 		() => ({
-			user,
-			isLoading,
-			isAuthUnavailable,
-			isAuthenticated: Boolean(user),
+			isLoading: false,
+			sessionExpiresAt: authState.sessionExpiresAt,
+			sessionMessage: authState.sessionMessage,
+			isAuthenticated: Boolean(authState.sessionExpiresAt) || env.bypassAuth,
 			signIn,
 			signUp,
 			signOut,
 		}),
-		[isAuthUnavailable, isLoading, signIn, signOut, signUp, user],
+		[authState, signIn, signOut, signUp],
 	);
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

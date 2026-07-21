@@ -1,16 +1,6 @@
 import "./TransactionRegisterPage.scss";
 
-import {
-	Alert,
-	Button,
-	FormHelperText,
-	FormControl,
-	InputLabel,
-	MenuItem,
-	Select,
-	Skeleton,
-	TextField,
-} from "@mui/material";
+import { Alert, Button, FormHelperText, FormControl, InputLabel, MenuItem, Select, Skeleton, TextField } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
@@ -23,7 +13,7 @@ import {
 	type TransactionFormData,
 } from "../../schemas/transactionSchema";
 import { useCreateTransaction } from "../../hooks/useTransactions";
-import { usePeople } from "../../../people/hooks/usePeople";
+import { useAllPeople } from "../../../people/hooks/usePeople";
 import { useState } from "react";
 import { useEffect } from "react";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
@@ -32,6 +22,8 @@ import {
 	getApiErrorFeedback,
 	getApiErrorTitle,
 } from "../../../../shared/api/apiError";
+import { TransactionType } from "../../types/transaction";
+import { transactionTypeOptions } from "../../utils/transactionLabels";
 
 const TransactionsRegisterHeaderData = {
 	sector: "Transações",
@@ -49,7 +41,7 @@ const TransactionRegisterPage = () => {
 		isError: isPeopleError,
 		isLoading: isPeopleLoading,
 		refetch: refetchPeople,
-	} = usePeople();
+	} = useAllPeople();
 	const peopleErrorFeedback = getApiErrorFeedback(
 		peopleError,
 		"peopleOptionsLoad",
@@ -64,13 +56,10 @@ const TransactionRegisterPage = () => {
 	} = useForm<TransactionFormData>({
 		resolver: zodResolver(transactionSchema),
 		defaultValues: {
-			personId: 0,
-			type: "expense",
+			personId: "",
+			type: TransactionType.Expense,
 			description: "",
-			value: 0,
-			category: "",
-			date: "",
-			observation: "",
+			amount: 0,
 		},
 	});
 	const selectedPersonId = useWatch({ control, name: "personId" });
@@ -84,8 +73,8 @@ const TransactionRegisterPage = () => {
 
 	useEffect(() => {
 		// A API também deve validar, mas o formulário já protege a UX contra receitas para menores.
-		if (isSelectedPersonUnderAge && selectedType === "income") {
-			setValue("type", "expense", {
+		if (isSelectedPersonUnderAge && selectedType === TransactionType.Revenue) {
+			setValue("type", TransactionType.Expense, {
 				shouldDirty: true,
 				shouldTouch: true,
 				shouldValidate: true,
@@ -101,7 +90,7 @@ const TransactionRegisterPage = () => {
 			if (
 				person?.age !== undefined &&
 				person.age < 18 &&
-				data.type === "income"
+				data.type === TransactionType.Revenue
 			) {
 				setSubmitError(
 					"Pessoas menores de 18 anos só podem ter despesas cadastradas.",
@@ -166,7 +155,7 @@ const TransactionRegisterPage = () => {
 													labelId="person-label"
 													label="Pessoa"
 												>
-													<MenuItem value={0}>
+													<MenuItem value="">
 														<em>Selecione uma pessoa</em>
 													</MenuItem>
 
@@ -190,14 +179,18 @@ const TransactionRegisterPage = () => {
 										control={control}
 										render={({ field }) => (
 											<Select {...field} labelId="type-label" label="Tipo">
-												<MenuItem
-													value="income"
-													disabled={isSelectedPersonUnderAge}
-												>
-													Receita
-												</MenuItem>
-
-												<MenuItem value="expense">Despesa</MenuItem>
+												{transactionTypeOptions.map((option) => (
+													<MenuItem
+														key={option.value}
+														value={option.value}
+														disabled={
+															option.value === TransactionType.Revenue &&
+															isSelectedPersonUnderAge
+														}
+													>
+														{option.label}
+													</MenuItem>
+												))}
 											</Select>
 										)}
 									/>
@@ -221,63 +214,9 @@ const TransactionRegisterPage = () => {
 									label="Valor"
 									type="number"
 									fullWidth
-									{...register("value", { valueAsNumber: true })}
-									error={Boolean(errors.value)}
-									helperText={errors.value?.message}
-								/>
-
-								<FormControl fullWidth error={Boolean(errors.category)}>
-									<InputLabel id="category-label">Categoria</InputLabel>
-
-									<Controller
-										name="category"
-										control={control}
-										render={({ field }) => (
-											<Select
-												{...field}
-												labelId="category-label"
-												label="Categoria"
-											>
-												<MenuItem value="">
-													<em>Selecione uma categoria</em>
-												</MenuItem>
-												<MenuItem value="Alimentação">Alimentação</MenuItem>
-
-												<MenuItem value="Moradia">Moradia</MenuItem>
-
-												<MenuItem value="Transporte">Transporte</MenuItem>
-
-												<MenuItem value="Saúde">Saúde</MenuItem>
-
-												<MenuItem value="Outros">Outros</MenuItem>
-											</Select>
-										)}
-									/>
-									<FormHelperText>{errors.category?.message}</FormHelperText>
-								</FormControl>
-
-								<TextField
-									label="Data"
-									type="date"
-									fullWidth
-									{...register("date")}
-									error={Boolean(errors.date)}
-									helperText={errors.date?.message}
-									slotProps={{
-										inputLabel: {
-											shrink: true,
-										},
-									}}
-								/>
-							</div>
-
-							<div className="transaction-form__observation">
-								<TextField
-									label="Observação"
-									multiline
-									rows={3}
-									fullWidth
-									{...register("observation")}
+									{...register("amount", { valueAsNumber: true })}
+									error={Boolean(errors.amount)}
+									helperText={errors.amount?.message}
 								/>
 							</div>
 

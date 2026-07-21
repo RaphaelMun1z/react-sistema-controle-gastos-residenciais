@@ -4,6 +4,8 @@ import type { FinancialAnalysisRequest } from "../types/financialAnalysis";
 
 export const useFinancialAnalysis = () =>
 	useMutation({
-		mutationFn: (request: FinancialAnalysisRequest) =>
-			financialAnalysisService.analyze(request),
+		mutationFn: (_request: FinancialAnalysisRequest) => {
+			void _request;
+			return financialAnalysisService.analyze();
+		},
 	});

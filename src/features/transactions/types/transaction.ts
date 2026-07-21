@@ -1,32 +1,22 @@
-export type TransactionType = "income" | "expense";
+export const TransactionType = {
+	Expense: 0,
+	Revenue: 1,
+} as const;
+
+export type TransactionType =
+	(typeof TransactionType)[keyof typeof TransactionType];
 
 export interface Transaction {
-	id: number;
-	personId: number;
-	personName: string;
+	id: string;
+	personId: string;
 	description: string;
-	category: string;
 	type: TransactionType;
-	value: number;
-	date: string;
-	observation?: string;
+	amount: number;
 }
 
 export interface CreateTransactionInput {
-	personId: number;
+	personId: string;
 	type: TransactionType;
 	description: string;
-	value: number;
-	category: string;
-	date: string;
-	observation?: string;
-}
-
-export type UpdateTransactionInput = Partial<CreateTransactionInput>;
-
-export interface TransactionFilters {
-	personId?: number;
-	type?: TransactionType;
-	startDate?: string;
-	endDate?: string;
+	amount: number;
 }

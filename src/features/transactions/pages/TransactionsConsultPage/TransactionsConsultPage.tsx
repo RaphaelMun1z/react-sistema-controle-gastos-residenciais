@@ -2,36 +2,27 @@ import "./TransactionsConsultPage.scss";
 
 // Componentes
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
-import Table, {
-	type TableAction,
-	type TableColumn,
-} from "../../../../shared/components/Table/Table";
+import Table, { type TableColumn } from "../../../../shared/components/Table/Table";
 
 // Componentes do Material UI
-import { Alert, Button, Snackbar } from "@mui/material";
+import { Button, Pagination } from "@mui/material";
 import { useState } from "react";
 
 // Ícones
 import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
 
 // React Router
 import { Link } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
-import {
-	useDeleteTransaction,
-	useTransactions,
-} from "../../hooks/useTransactions";
+import { useTransactions } from "../../hooks/useTransactions";
 import type { Transaction } from "../../types/transaction";
 import { transactionTypeLabels } from "../../utils/transactionLabels";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../../shared/components/DataState/EmptyState";
 import TableSkeleton from "../../../../shared/components/skeletons/TableSkeleton";
-import {
-	getApiErrorFeedback,
-	getApiErrorTitle,
-} from "../../../../shared/api/apiError";
+import { getApiErrorFeedback } from "../../../../shared/api/apiError";
 import walletImage from "../../../../assets/images/wallet.png";
+import { useAllPeople } from "../../../people/hooks/usePeople";
 
 // Cabeçalho da página
 const TransactionsConsultHeaderData = {
@@ -46,15 +37,11 @@ const columns: TableColumn<Transaction>[] = [
 	{
 		key: "person",
 		label: "Pessoa",
-		render: (transaction) => transaction.personName,
+		render: (transaction) => transaction.personId,
 	},
 	{
 		key: "description",
 		label: "Descrição",
-	},
-	{
-		key: "category",
-		label: "Categoria",
 	},
 	{
 		key: "type",
@@ -62,59 +49,41 @@ const columns: TableColumn<Transaction>[] = [
 		render: (transaction) => transactionTypeLabels[transaction.type],
 	},
 	{
-		key: "value",
+		key: "amount",
 		label: "Valor",
 		align: "right",
 		render: (transaction) =>
-			transaction.value.toLocaleString("pt-BR", {
+			transaction.amount.toLocaleString("pt-BR", {
 				style: "currency",
 				currency: "BRL",
 			}),
 	},
-	{
-		key: "date",
-		label: "Data",
-		render: (transaction) =>
-			new Intl.DateTimeFormat("pt-BR").format(
-				new Date(`${transaction.date}T00:00:00`),
-			),
-	},
 ];
 
 const TransactionsConsultPage = () => {
+	const [page, setPage] = useState(1);
+	const pageSize = 10;
 	const {
-		data: transactions = [],
+		data,
 		error,
 		isError,
 		isLoading,
+		isFetching,
 		refetch,
-	} = useTransactions();
+	} = useTransactions({ page, pageSize });
+	const { data: people = [] } = useAllPeople();
+	const peopleById = new Map(people.map((person) => [person.id, person.name]));
+	const transactions = data?.content ?? [];
 	const errorFeedback = getApiErrorFeedback(error, "transactionsList");
-	const deleteTransaction = useDeleteTransaction();
-	const [feedbackMessage, setFeedbackMessage] = useState("");
-	const [feedbackError, setFeedbackError] = useState("");
-
-	const actions: TableAction<Transaction>[] = [
-		{
-			label: "Excluir",
-			icon: <DeleteIcon />,
-			color: "error",
-			onClick: (transaction) => {
-				const shouldRemove = window.confirm(
-					`Deseja excluir "${transaction.description}"?`,
-				);
-
-				if (shouldRemove) {
-					deleteTransaction.mutate(transaction.id, {
-						onSuccess: () =>
-							setFeedbackMessage("Transação excluída com sucesso."),
-						onError: (error) =>
-							setFeedbackError(getApiErrorTitle(error, "transactionsDelete")),
-					});
+	const columnsWithPersonName: TableColumn<Transaction>[] = columns.map((column) =>
+		column.key === "person"
+			? {
+					...column,
+					render: (transaction) =>
+						peopleById.get(transaction.personId) ?? transaction.personId,
 				}
-			},
-		},
-	];
+			: column,
+	);
 
 	return (
 		<section className="transactions-consult-page">
@@ -153,27 +122,28 @@ const TransactionsConsultPage = () => {
 				)}
 
 				{!isLoading && !isError && transactions.length > 0 && (
-					<Table
-						columns={columns}
-						rows={transactions}
-						getRowId={(transaction) => transaction.id}
-						actions={actions}
-					/>
+					<>
+						<span className="transactions-consult-page__total">
+							{data?.totalElements ?? 0} transações registradas
+							{isFetching ? " - atualizando..." : ""}
+						</span>
+						<Table
+							columns={columnsWithPersonName}
+							rows={transactions}
+							getRowId={(transaction) => transaction.id}
+						/>
+						{(data?.totalPages ?? 0) > 1 && (
+							<Pagination
+								className="transactions-consult-page__pagination"
+								page={page}
+								count={data?.totalPages ?? 1}
+								onChange={(_event, nextPage) => setPage(nextPage)}
+								color="primary"
+							/>
+						)}
+					</>
 				)}
 			</div>
-
-			{feedbackError && (
-				<Alert severity="error" onClose={() => setFeedbackError("")}>
-					{feedbackError}
-				</Alert>
-			)}
-
-			<Snackbar
-				open={Boolean(feedbackMessage)}
-				autoHideDuration={3000}
-				onClose={() => setFeedbackMessage("")}
-				message={feedbackMessage}
-			/>
 		</section>
 	);
 };

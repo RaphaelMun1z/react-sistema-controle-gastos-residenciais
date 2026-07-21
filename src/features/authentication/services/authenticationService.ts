@@ -22,36 +22,22 @@ export const authenticationService = {
 		const session = await httpClient.post<
 			AuthSessionResponseDTO,
 			SignInRequestDTO
-		>(API_ENDPOINTS.auth.signIn, credentials);
+		>(API_ENDPOINTS.auth.login, credentials);
 
 		return mapSessionResponseToSession(session);
 	},
 
-	async signUp(data: SignUpData): Promise<AuthSession> {
+	async signUp(data: SignUpData): Promise<AuthUser> {
 		const request: SignUpRequestDTO = {
 			name: data.name,
+			birthDate: data.birthDate,
 			email: data.email,
 			password: data.password,
 		};
-		const session = await httpClient.post<
-			AuthSessionResponseDTO,
+		const user = await httpClient.post<
+			AuthUserResponseDTO,
 			SignUpRequestDTO
-		>(API_ENDPOINTS.auth.signUp, request);
-
-		return mapSessionResponseToSession(session);
-	},
-
-	async signOut(): Promise<void> {
-		await httpClient.post<void, Record<string, never>>(
-			API_ENDPOINTS.auth.signOut,
-			{},
-		);
-	},
-
-	async getCurrentUser(): Promise<AuthUser> {
-		const user = await httpClient.get<AuthUserResponseDTO>(
-			API_ENDPOINTS.auth.currentUser,
-		);
+		>(API_ENDPOINTS.auth.register, request);
 
 		return mapUserResponseToUser(user);
 	},

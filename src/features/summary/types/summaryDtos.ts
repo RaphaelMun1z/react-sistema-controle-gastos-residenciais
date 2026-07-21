@@ -1,7 +1,7 @@
 import type { PersonSummary, SummaryFilters } from "./summary";
 
 export interface SummaryResponseDTO {
-	personId: number;
+	personId: string;
 	personName: string;
 	income: number;
 	expenses: number;

@@ -1,7 +1,10 @@
 export interface AuthUser {
-	id: string;
+	accountId: string;
+	personId: string;
 	name: string;
 	email: string;
+	birthDate: string;
+	age: number;
 }
 
 export interface SignInCredentials {
@@ -11,11 +14,13 @@ export interface SignInCredentials {
 
 export interface SignUpData {
 	name: string;
+	birthDate: string;
 	email: string;
 	password: string;
 	confirmPassword: string;
 }
 
 export interface AuthSession {
-	user: AuthUser;
+	accessToken: string;
+	expiresAt: string;
 }

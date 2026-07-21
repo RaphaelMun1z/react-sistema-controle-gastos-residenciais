@@ -24,7 +24,7 @@ import { getApiErrorTitle } from "../../../../shared/api/apiError";
 
 const SignIn = () => {
 	const navigate = useNavigate();
-	const { signIn } = useAuth();
+	const { signIn, sessionMessage } = useAuth();
 	const [submitError, setSubmitError] = useState("");
 	const {
 		register,
@@ -55,6 +55,7 @@ const SignIn = () => {
 			</header>
 
 			<form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
+				{sessionMessage && <Alert severity="info">{sessionMessage}</Alert>}
 				{submitError && <Alert severity="error">{submitError}</Alert>}
 
 				<div className="input-container">

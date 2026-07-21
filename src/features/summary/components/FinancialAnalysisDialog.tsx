@@ -23,6 +23,7 @@ interface FinancialAnalysisDialogProps {
 	isPending: boolean;
 	isError: boolean;
 	isInsufficientData: boolean;
+	isUnavailable?: boolean;
 	result?: FinancialAnalysisResultData;
 	context: FinancialAnalysisContext;
 	request: FinancialAnalysisRequest;
@@ -36,6 +37,7 @@ const FinancialAnalysisDialog = ({
 	isPending,
 	isError,
 	isInsufficientData,
+	isUnavailable = false,
 	result,
 	context,
 	request,
@@ -79,7 +81,18 @@ const FinancialAnalysisDialog = ({
 					/>
 				)}
 
-				{!isPending && isError && (
+				{!isPending && isUnavailable && (
+					<ErrorState
+						title="Análise com IA estará disponível em breve."
+						description="O backend atual ainda não possui endpoint para análise financeira por IA."
+						image={walletImage}
+						imageAlt="Carteira vazia"
+						actionLabel="Fechar"
+						onRetry={onClose}
+					/>
+				)}
+
+				{!isPending && !isUnavailable && isError && (
 					<ErrorState
 						title="Não foi possível concluir a análise"
 						description="Tente novamente em alguns instantes."
@@ -90,12 +103,12 @@ const FinancialAnalysisDialog = ({
 					/>
 				)}
 
-				{!isPending && !isError && !isInsufficientData && result && (
+				{!isPending && !isUnavailable && !isError && !isInsufficientData && result && (
 					<FinancialAnalysisResult result={result} context={context} />
 				)}
 			</DialogContent>
 
-			{!isPending && !isError && !isInsufficientData && (
+			{!isPending && !isUnavailable && !isError && !isInsufficientData && (
 				<DialogActions>
 					{canGenerateAgain && (
 						<Button onClick={() => onAnalyze(request)}>

@@ -1,5 +1,5 @@
 export interface PersonSummary {
-	personId: number;
+	personId: string;
 	personName: string;
 	income: number;
 	expenses: number;

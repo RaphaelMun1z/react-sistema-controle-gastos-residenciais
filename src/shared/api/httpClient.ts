@@ -1,10 +1,17 @@
 import { env } from "../config/env";
+import { authTokenStorage } from "./authTokenStorage";
 import { createApiError, createHttpError } from "./apiError";
+import type { ProblemDetails } from "./apiTypes";
 
 const API_BASE_URL = env.apiUrl;
 const DEFAULT_TIMEOUT_IN_MS = 10000;
 
 const buildUrl = (path: string) => `${API_BASE_URL}${path}`;
+let onUnauthorized: (() => void) | null = null;
+
+export const setUnauthorizedHandler = (handler: (() => void) | null) => {
+	onUnauthorized = handler;
+};
 
 const buildQueryString = (params?: Record<string, string | number | undefined>) => {
 	if (!params) {
@@ -86,13 +93,19 @@ const request = async <TResponse>(
 		delete requestInit.params;
 		delete requestInit.timeoutInMs;
 
+		const headers = new Headers(requestInit.headers);
+		headers.set("Content-Type", "application/json");
+		const authorizationHeader = getAuthorizationHeader();
+
+		if (authorizationHeader.Authorization) {
+			headers.set("Authorization", authorizationHeader.Authorization);
+		}
+		delete requestInit.headers;
+
 		const response = await fetch(
 			`${buildUrl(path)}${buildQueryString(params)}`,
 			{
-				headers: {
-					"Content-Type": "application/json",
-					...requestInit.headers,
-				},
+				headers,
 				credentials: "include",
 				signal: controller.signal,
 				...requestInit,
@@ -100,7 +113,13 @@ const request = async <TResponse>(
 		);
 
 		if (!response.ok) {
-			throw createHttpError(response.status);
+			const problemDetails = await readProblemDetails(response);
+
+			if (response.status === 401 && path !== "/auth/login") {
+				onUnauthorized?.();
+			}
+
+			throw createHttpError(response.status, problemDetails);
 		}
 
 		if (response.status === 204) {
@@ -112,5 +131,34 @@ const request = async <TResponse>(
 		throw createApiError(error);
 	} finally {
 		globalThis.clearTimeout(timeout);
+	}
+};
+
+const getAuthorizationHeader = () => {
+	const token = authTokenStorage.get();
+
+	if (!token || authTokenStorage.isExpired(token)) {
+		authTokenStorage.clear();
+		return {};
+	}
+
+	return {
+		Authorization: `Bearer ${token.accessToken}`,
+	};
+};
+
+const readProblemDetails = async (
+	response: Response,
+): Promise<ProblemDetails | undefined> => {
+	const contentType = response.headers.get("Content-Type");
+
+	if (!contentType?.includes("application/json")) {
+		return undefined;
+	}
+
+	try {
+		return (await response.json()) as ProblemDetails;
+	} catch {
+		return undefined;
 	}
 };

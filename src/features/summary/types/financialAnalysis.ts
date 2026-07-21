@@ -1,7 +1,7 @@
 import type { SummaryFilters } from "./summary";
 
 export interface FinancialAnalysisRequest {
-	personId?: number;
+	personId?: string;
 	startDate?: string;
 	endDate?: string;
 }
@@ -31,7 +31,7 @@ export interface FinancialAnalysisContext {
 export const mapSummaryFiltersToAnalysisRequest = (
 	filters: SummaryFilters,
 ): FinancialAnalysisRequest => ({
-	personId: filters.personId === "all" ? undefined : Number(filters.personId),
+	personId: filters.personId === "all" ? undefined : filters.personId,
 	startDate: filters.startDate || undefined,
 	endDate: filters.endDate || undefined,
 });

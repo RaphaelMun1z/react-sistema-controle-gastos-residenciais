@@ -1,36 +1,30 @@
 import type {
 	CreateTransactionInput,
 	Transaction,
-	TransactionFilters,
-	UpdateTransactionInput,
 } from "./transaction";
+import { TransactionType } from "./transaction";
 
 export interface TransactionResponseDTO {
-	id: number;
-	personId: number;
-	personName: string;
+	id: string;
+	personId: string;
 	description: string;
-	category: string;
-	type: "income" | "expense";
-	value: number;
-	date: string;
-	observation?: string;
+	type: number;
+	amount: number;
 }
 
 export type CreateTransactionRequestDTO = CreateTransactionInput;
-export type UpdateTransactionRequestDTO = UpdateTransactionInput;
-export type TransactionFiltersRequestDTO = TransactionFilters;
+
+const mapTransactionType = (type: number) =>
+	type === TransactionType.Revenue
+		? TransactionType.Revenue
+		: TransactionType.Expense;
 
 export const mapTransactionResponseToTransaction = (
 	transaction: TransactionResponseDTO,
 ): Transaction => ({
 	id: transaction.id,
 	personId: transaction.personId,
-	personName: transaction.personName,
 	description: transaction.description,
-	category: transaction.category,
-	type: transaction.type,
-	value: transaction.value,
-	date: transaction.date,
-	observation: transaction.observation,
+	type: mapTransactionType(transaction.type),
+	amount: transaction.amount,
 });

@@ -1,20 +1,19 @@
-import type { CreatePersonInput, Person, UpdatePersonInput } from "./person";
+import type { CreatePersonInput, Person } from "./person";
 
 export interface PersonResponseDTO {
-	id: number;
+	id: string;
 	name: string;
-	email: string;
+	birthDate: string;
 	age: number;
 }
 
 export type CreatePersonRequestDTO = CreatePersonInput;
-export type UpdatePersonRequestDTO = UpdatePersonInput;
 
 export const mapPersonResponseToPerson = (
 	person: PersonResponseDTO,
 ): Person => ({
 	id: person.id,
 	name: person.name,
-	email: person.email,
+	birthDate: person.birthDate,
 	age: person.age,
 });

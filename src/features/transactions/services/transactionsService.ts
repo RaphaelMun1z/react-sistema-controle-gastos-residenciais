@@ -1,69 +1,82 @@
 import { API_ENDPOINTS } from "../../../shared/api/apiEndpoints";
+import type { PagedResponse, PaginationParams, Resource } from "../../../shared/api/apiTypes";
 import { httpClient } from "../../../shared/api/httpClient";
 import type {
 	CreateTransactionInput,
 	Transaction,
-	TransactionFilters,
-	UpdateTransactionInput,
 } from "../types/transaction";
 import type {
 	CreateTransactionRequestDTO,
 	TransactionResponseDTO,
-	UpdateTransactionRequestDTO,
 } from "../types/transactionDtos";
 import { mapTransactionResponseToTransaction } from "../types/transactionDtos";
 
+const DEFAULT_PAGE_SIZE_FOR_AGGREGATION = 100;
+
 export const transactionsService = {
-	async getTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
-		const transactions = await httpClient.get<TransactionResponseDTO[]>(
+	async getTransactions(
+		params: PaginationParams,
+	): Promise<PagedResponse<Transaction>> {
+		const response = await httpClient.get<PagedResponse<TransactionResponseDTO>>(
 			API_ENDPOINTS.transactions,
-			{
-				params: filters
-					? {
-							personId: filters.personId,
-							type: filters.type,
-							startDate: filters.startDate,
-							endDate: filters.endDate,
-						}
-					: undefined,
-			},
+			{ params: { page: params.page, pageSize: params.pageSize } },
 		);
 
-		return transactions.map(mapTransactionResponseToTransaction);
+		return {
+			...response,
+			content: response.content.map(mapTransactionResponseToTransaction),
+		};
 	},
 
-	async getTransactionById(id: number): Promise<Transaction> {
-		const transaction = await httpClient.get<TransactionResponseDTO>(
+	async getTransactionsByPerson(
+		personId: string,
+		params: PaginationParams,
+	): Promise<PagedResponse<Transaction>> {
+		const response = await httpClient.get<PagedResponse<TransactionResponseDTO>>(
+			API_ENDPOINTS.transactionsByPerson(personId),
+			{ params: { page: params.page, pageSize: params.pageSize } },
+		);
+
+		return {
+			...response,
+			content: response.content.map(mapTransactionResponseToTransaction),
+		};
+	},
+
+	async getAllTransactions(): Promise<Transaction[]> {
+		const firstPage = await this.getTransactions({
+			page: 1,
+			pageSize: DEFAULT_PAGE_SIZE_FOR_AGGREGATION,
+		});
+		const transactions = [...firstPage.content];
+
+		for (let page = 2; page <= firstPage.totalPages; page += 1) {
+			const nextPage = await this.getTransactions({
+				page,
+				pageSize: DEFAULT_PAGE_SIZE_FOR_AGGREGATION,
+			});
+			transactions.push(...nextPage.content);
+		}
+
+		return transactions;
+	},
+
+	async getTransactionById(id: string): Promise<Transaction> {
+		const resource = await httpClient.get<Resource<TransactionResponseDTO>>(
 			API_ENDPOINTS.transactionById(id),
 		);
 
-		return mapTransactionResponseToTransaction(transaction);
+		return mapTransactionResponseToTransaction(resource.data);
 	},
 
 	async createTransaction(
 		input: CreateTransactionInput,
 	): Promise<Transaction> {
-		const transaction = await httpClient.post<
-			TransactionResponseDTO,
+		const resource = await httpClient.post<
+			Resource<TransactionResponseDTO>,
 			CreateTransactionRequestDTO
 		>(API_ENDPOINTS.transactions, input);
 
-		return mapTransactionResponseToTransaction(transaction);
-	},
-
-	async updateTransaction(
-		id: number,
-		input: UpdateTransactionInput,
-	): Promise<Transaction> {
-		const transaction = await httpClient.put<
-			TransactionResponseDTO,
-			UpdateTransactionRequestDTO
-		>(API_ENDPOINTS.transactionById(id), input);
-
-		return mapTransactionResponseToTransaction(transaction);
-	},
-
-	async deleteTransaction(id: number): Promise<void> {
-		await httpClient.delete<void>(API_ENDPOINTS.transactionById(id));
+		return mapTransactionResponseToTransaction(resource.data);
 	},
 };

@@ -32,8 +32,7 @@ const PersonRegisterPage = () => {
 		resolver: zodResolver(personSchema),
 		defaultValues: {
 			name: "",
-			email: "",
-			age: 18,
+			birthDate: "",
 		},
 	});
 
@@ -68,22 +67,17 @@ const PersonRegisterPage = () => {
 						/>
 
 						<TextField
-							label="E-mail"
-							type="email"
-							placeholder="exemplo@email.com"
+							label="Data de nascimento"
+							type="date"
 							fullWidth
-							{...register("email")}
-							error={Boolean(errors.email)}
-							helperText={errors.email?.message}
-						/>
-
-						<TextField
-							label="Idade"
-							type="number"
-							fullWidth
-							{...register("age", { valueAsNumber: true })}
-							error={Boolean(errors.age)}
-							helperText={errors.age?.message}
+							{...register("birthDate")}
+							error={Boolean(errors.birthDate)}
+							helperText={errors.birthDate?.message}
+							slotProps={{
+								inputLabel: {
+									shrink: true,
+								},
+							}}
 						/>
 					</div>
 

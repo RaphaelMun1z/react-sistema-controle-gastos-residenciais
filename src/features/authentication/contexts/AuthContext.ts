@@ -1,18 +1,17 @@
 import { createContext } from "react";
 import type {
-	AuthUser,
 	SignInCredentials,
 	SignUpData,
 } from "../types/auth";
 
 export interface AuthContextValue {
-	user: AuthUser | null;
 	isLoading: boolean;
-	isAuthUnavailable: boolean;
+	sessionExpiresAt: string | null;
+	sessionMessage: string;
 	isAuthenticated: boolean;
 	signIn: (credentials: SignInCredentials) => Promise<void>;
 	signUp: (data: SignUpData) => Promise<void>;
-	signOut: () => Promise<void>;
+	signOut: (message?: string) => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);

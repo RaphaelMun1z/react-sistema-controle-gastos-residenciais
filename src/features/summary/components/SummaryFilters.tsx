@@ -61,6 +61,8 @@ const SummaryFilters = ({
 					type="date"
 					size="small"
 					value={filters.startDate}
+					disabled
+					helperText="Filtro indisponível no contrato atual"
 					onChange={(event) =>
 						onChange({ ...filters, startDate: event.target.value })
 					}
@@ -76,6 +78,8 @@ const SummaryFilters = ({
 					type="date"
 					size="small"
 					value={filters.endDate}
+					disabled
+					helperText="Filtro indisponível no contrato atual"
 					onChange={(event) =>
 						onChange({ ...filters, endDate: event.target.value })
 					}

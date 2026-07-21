@@ -1,14 +1,11 @@
 export const API_ENDPOINTS = {
 	auth: {
-		signIn: "/auth/signin",
-		signUp: "/auth/signup",
-		signOut: "/auth/signout",
-		currentUser: "/auth/me",
+		login: "/auth/login",
+		register: "/auth/register",
 	},
 	people: "/people",
-	personById: (id: number) => `/people/${id}`,
+	personById: (id: string) => `/people/${id}`,
 	transactions: "/transactions",
-	transactionById: (id: number) => `/transactions/${id}`,
-	summary: "/summary",
-	summaryAnalysis: "/summary/analysis",
+	transactionById: (id: string) => `/transactions/${id}`,
+	transactionsByPerson: (personId: string) => `/transactions/person/${personId}`,
 } as const;

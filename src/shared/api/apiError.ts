@@ -1,9 +1,12 @@
+import type { ProblemDetails } from "./apiTypes";
+
 export type ApiErrorType = "network" | "timeout" | "http" | "unknown";
 
 export interface ApiError {
 	type: ApiErrorType;
 	message: string;
 	status?: number;
+	problemDetails?: ProblemDetails;
 }
 
 export interface UiError {
@@ -19,7 +22,6 @@ export type UiErrorContext =
 	| "peopleDelete"
 	| "transactionsList"
 	| "transactionsCreate"
-	| "transactionsDelete"
 	| "summaryLoad"
 	| "financialAnalysis"
 	| "peopleOptionsLoad"
@@ -48,7 +50,6 @@ const contextTitles: Record<UiErrorContext, string> = {
 	peopleDelete: "Não foi possível excluir a pessoa.",
 	transactionsList: "Não foi possível carregar suas transações.",
 	transactionsCreate: "Não foi possível registrar a transação.",
-	transactionsDelete: "Não foi possível excluir a transação.",
 	summaryLoad: "Não foi possível carregar seu resumo financeiro.",
 	financialAnalysis: "Não foi possível concluir a análise",
 	peopleOptionsLoad: "Não foi possível carregar as pessoas cadastradas.",
@@ -81,9 +82,13 @@ export const createApiError = (error: unknown): ApiError => {
 	};
 };
 
-export const createHttpError = (status: number): ApiError => ({
+export const createHttpError = (
+	status: number,
+	problemDetails?: ProblemDetails,
+): ApiError => ({
 	type: "http",
 	status,
+	problemDetails,
 	message:
 		httpErrorMessages[status] ?? "Algo deu errado. Não conseguimos concluir essa ação agora.",
 });
@@ -93,7 +98,11 @@ export const getApiErrorMessage = (error: unknown) =>
 
 const getConflictMessage = (context: UiErrorContext) => {
 	if (context === "peopleCreate") {
-		return "Já existe uma pessoa cadastrada com esse e-mail.";
+		return "Já existe uma pessoa cadastrada com essas informações.";
+	}
+
+	if (context === "signUp") {
+		return "Já existe uma conta com este e-mail.";
 	}
 
 	return "Já existe um registro com essas informações.";
@@ -149,7 +158,10 @@ export const getApiErrorFeedback = (
 
 	if (apiError.status === 400 || apiError.status === 422) {
 		return {
-			title: "Alguns dados precisam de atenção.",
+			title:
+				context === "transactionsCreate"
+					? "Não foi possível registrar essa transação."
+					: "Alguns dados precisam de atenção.",
 			description: "Revise as informações preenchidas e tente novamente.",
 		};
 	}

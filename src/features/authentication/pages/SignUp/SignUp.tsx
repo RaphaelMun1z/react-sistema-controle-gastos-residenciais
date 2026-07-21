@@ -7,6 +7,7 @@ import { Alert, Button, TextField } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import CakeOutlinedIcon from "@mui/icons-material/CakeOutlined";
 import GoogleIcon from "@mui/icons-material/Google";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
@@ -35,6 +36,7 @@ const SignUp = () => {
 		resolver: zodResolver(signUpSchema),
 		defaultValues: {
 			name: "",
+			birthDate: "",
 			email: "",
 			password: "",
 			confirmPassword: "",
@@ -45,7 +47,7 @@ const SignUp = () => {
 		try {
 			setSubmitError("");
 			await signUp(data);
-			navigate(ROUTES.people);
+			navigate(ROUTES.signIn);
 		} catch (error) {
 			setSubmitError(getApiErrorTitle(error, "signUp"));
 		}
@@ -75,6 +77,30 @@ const SignUp = () => {
 							input: {
 								startAdornment: (
 									<PersonIcon className="input-icon" />
+								),
+							},
+						}}
+					/>
+				</div>
+
+				<div className="input-container">
+					<label htmlFor="birthDate">Data de nascimento</label>
+
+					<TextField
+						id="birthDate"
+						type="date"
+						{...register("birthDate")}
+						fullWidth
+						size="small"
+						error={Boolean(errors.birthDate)}
+						helperText={errors.birthDate?.message}
+						slotProps={{
+							inputLabel: {
+								shrink: true,
+							},
+							input: {
+								startAdornment: (
+									<CakeOutlinedIcon className="input-icon" />
 								),
 							},
 						}}
