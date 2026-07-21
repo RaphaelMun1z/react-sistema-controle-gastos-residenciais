@@ -66,10 +66,6 @@ O backend atual não possui endpoint dedicado de resumo financeiro. O frontend m
 
 Filtros por período estão desabilitados porque o contrato de transações atual não retorna data nem aceita `startDate`/`endDate`.
 
-## IA
-
-O backend atual não possui endpoint de análise financeira por IA. A UI informa que o recurso estará disponível em breve e não faz chamada fictícia.
-
 ## Executar
 
 ```bash
@@ -92,6 +88,5 @@ npm run test:e2e
 
 - Endpoint agregado de resumo financeiro.
 - Filtros server-side por período.
-- Endpoint de análise financeira por IA.
 - Busca/autocomplete de pessoas.
 - Refresh token ou estratégia de sessão mais robusta.

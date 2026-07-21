@@ -3,9 +3,11 @@
 .summary-page {
 	width: 100%;
 	min-width: 0;
-	min-height: 100%;
+	height: 100%;
+	min-height: 0;
 	display: flex;
 	flex-direction: column;
+	overflow: hidden;
 }
 
 .summary-page__fetching {
@@ -83,6 +85,7 @@
 	grid-template-columns: minmax(0, 1fr) 340px;
 	gap: 40px;
 	margin-top: 32px;
+	overflow: hidden;
 }
 
 .scroll-container {
@@ -198,9 +201,38 @@
 
 .summary-value {
 	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 6px;
 	font-size: 0.95rem;
 	font-weight: 600;
 	text-align: right;
+}
+
+.summary-value__icon,
+.signed-amount__icon {
+	font-size: 16px !important;
+	flex-shrink: 0;
+}
+
+.signed-amount {
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 6px;
+}
+
+.signed-amount__icon.positive {
+	color: #2e7d32;
+}
+
+.signed-amount__icon.negative {
+	color: #d32f2f;
+}
+
+.signed-amount__icon.neutral {
+	color: #6b7280;
 }
 
 .income-value {
@@ -304,90 +336,6 @@
 	}
 }
 
-/* Card de análise com IA */
-.ai-analysis-card {
-	width: 100%;
-	padding: 24px;
-	background: linear-gradient(135deg, #310026 0%, #3a062f 50%, #430c38 100%);
-	color: #fff;
-	border-radius: 14px;
-	display: flex;
-	flex-direction: column;
-	gap: 18px;
-}
-
-.ai-card-icon {
-	width: 52px;
-	height: 52px;
-
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	background: transparent;
-
-	svg {
-		font-size: 30px;
-		color: #fff;
-	}
-}
-
-.ai-card-content {
-	h3 {
-		margin: 0 0 8px;
-
-		font-size: 1rem;
-		font-weight: 600;
-		color: #fff;
-	}
-
-	p {
-		margin: 0 0 20px;
-
-		font-size: 0.8rem;
-		line-height: 1.5;
-
-		color: rgba(255, 255, 255, 0.75);
-	}
-
-	button {
-		width: 100%;
-
-		padding: 11px 16px;
-
-		border: none;
-		border-radius: 7px;
-
-		background-color: #fff;
-		color: #1e3a5f;
-
-		&:hover {
-			background-color: #f1f5f9;
-		}
-
-		&:disabled {
-			opacity: 0.65;
-			cursor: not-allowed;
-		}
-
-		font-size: 0.78rem;
-		font-weight: 600;
-
-		text-transform: uppercase;
-		letter-spacing: 0.4px;
-
-		cursor: pointer;
-
-		transition:
-			background-color 0.2s ease,
-			transform 0.2s ease;
-
-		&:active {
-			transform: scale(0.98);
-		}
-	}
-}
-
 .summary-skeleton {
 	width: 100%;
 	margin-top: 28px;
@@ -444,6 +392,8 @@
 @include down(1100px) {
 	.summary-layout {
 		grid-template-columns: 1fr;
+		overflow-y: auto;
+		padding-right: 8px;
 	}
 
 	.summary-aside {
@@ -456,10 +406,6 @@
 
 		border-left: none;
 		border-top: 1px solid #e5e5e5;
-	}
-
-	.ai-analysis-card {
-		max-width: 400px;
 	}
 
 	.summary-skeleton__layout {
@@ -486,6 +432,7 @@
 @include down($breakpoint-md) {
 	.summary-layout {
 		margin-top: 24px;
+		padding-right: 0;
 	}
 
 	.scroll-container {
@@ -507,10 +454,6 @@
 
 	.overview-item > span {
 		margin-top: 4px;
-	}
-
-	.ai-analysis-card {
-		max-width: none;
 	}
 
 	.filters-fields {

@@ -1,5 +1,4 @@
 import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { API_ENDPOINTS } from "../../../shared/api/apiEndpoints";
@@ -68,20 +67,15 @@ describe("SummaryPage", () => {
 		expect(screen.getAllByText(/R\$\s*300,00/)[0]).toBeInTheDocument();
 	});
 
-	it("mantém análise com IA sem chamada HTTP quando endpoint não existe", async () => {
+	it("não renderiza a ação de análise removida", async () => {
 		setupHandlers();
 
 		renderWithProviders(<SummaryPage />);
 
 		await screen.findByRole("heading", { name: "Raphael Muniz" });
-		await userEvent.click(
-			screen.getByRole("button", { name: "Analisar transações" }),
-		);
-
+		const removedActionName = ["Analisar", "transações"].join(" ");
 		expect(
-			await screen.findByRole("heading", {
-				name: "Análise com IA estará disponível em breve.",
-			}),
-		).toBeInTheDocument();
+			screen.queryByRole("button", { name: new RegExp(removedActionName, "i") }),
+		).not.toBeInTheDocument();
 	});
 });

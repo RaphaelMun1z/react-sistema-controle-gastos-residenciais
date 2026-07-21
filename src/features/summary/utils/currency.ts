@@ -1,5 +1,10 @@
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+	style: "currency",
+	currency: "BRL",
+});
+
 export const formatCurrency = (value: number) =>
-	value.toLocaleString("pt-BR", {
-		style: "currency",
-		currency: "BRL",
-	});
+	currencyFormatter.format(value);
+
+export const formatNegativeCurrency = (value: number) =>
+	currencyFormatter.format(-Math.abs(value));

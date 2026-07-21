@@ -1,13 +1,17 @@
 import "./PeopleConsultPage.scss";
 
 import DeleteIcon from "@mui/icons-material/Delete";
+import CakeOutlinedIcon from "@mui/icons-material/CakeOutlined";
+import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
+import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import Table, {
 	type TableAction,
 	type TableColumn,
 } from "../../../../shared/components/Table/Table";
 import { Alert, Button, Pagination, Snackbar } from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
 import { PersonAdd } from "@mui/icons-material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
@@ -18,30 +22,51 @@ import {
 	getApiErrorFeedback,
 	getApiErrorTitle,
 } from "../../../../shared/api/apiError";
-import { useDeletePerson, usePeople } from "../../hooks/usePeople";
+import { peopleQueryKey, useDeletePerson, usePeople } from "../../hooks/usePeople";
+import { peopleService } from "../../services/peopleService";
 import type { Person } from "../../types/person";
 
 interface PeopleConsultLocationState {
 	feedbackMessage?: string;
 }
 
+const columnHeader = (icon: ReactNode, label: string) => (
+	<span className="table-column-header">
+		{icon}
+		{label}
+	</span>
+);
+
+const cellWithIcon = (icon: ReactNode, value: ReactNode) => (
+	<span className="table-cell-detail">
+		{icon}
+		<span>{value}</span>
+	</span>
+);
+
 const columns: TableColumn<Person>[] = [
 	{
 		key: "name",
-		label: "Nome",
+		label: columnHeader(<PersonOutlinedIcon fontSize="small" />, "Nome"),
+		render: (person) =>
+			cellWithIcon(<PersonOutlinedIcon fontSize="small" />, person.name),
 	},
 	{
 		key: "birthDate",
-		label: "Nascimento",
+		label: columnHeader(<CakeOutlinedIcon fontSize="small" />, "Nascimento"),
 		render: (person) =>
-			new Intl.DateTimeFormat("pt-BR").format(
-				new Date(`${person.birthDate}T00:00:00`),
+			cellWithIcon(
+				<CakeOutlinedIcon fontSize="small" />,
+				new Intl.DateTimeFormat("pt-BR").format(
+					new Date(`${person.birthDate}T00:00:00`),
+				),
 			),
 	},
 	{
 		key: "age",
-		label: "Idade",
+		label: columnHeader(<BadgeOutlinedIcon fontSize="small" />, "Idade"),
 		align: "right",
+		render: (person) => `${person.age} anos`,
 	},
 ];
 
@@ -55,6 +80,7 @@ const PeopleConsultHeaderData = {
 const PeopleConsultPage = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 	const [page, setPage] = useState(1);
 	const pageSize = 10;
 	const {
@@ -78,6 +104,18 @@ const PeopleConsultPage = () => {
 			navigate(location.pathname, { replace: true, state: null });
 		}
 	}, [location.pathname, navigate, routeFeedback]);
+
+	useEffect(() => {
+		const totalPages = data?.totalPages ?? 0;
+		const nextPage = page + 1;
+
+		if (nextPage <= totalPages) {
+			void queryClient.prefetchQuery({
+				queryKey: [...peopleQueryKey, nextPage, pageSize] as const,
+				queryFn: () => peopleService.getPeople({ page: nextPage, pageSize }),
+			});
+		}
+	}, [data?.totalPages, page, pageSize, queryClient]);
 
 	const actions: TableAction<Person>[] = [
 		{
@@ -115,7 +153,11 @@ const PeopleConsultPage = () => {
 				</Button>
 			</div>
 
-			<div className="people-consult-page__table">
+			<div
+				className={`people-consult-page__table ${
+					isFetching && people.length > 0 ? "is-fetching" : ""
+				}`.trim()}
+			>
 				{isLoading && <TableSkeleton columns={columns.length} />}
 
 				{isError && (

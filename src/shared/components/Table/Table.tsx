@@ -16,14 +16,14 @@ import {
 // Interfaces
 interface AccessorTableColumn<T> {
 	key: keyof T;
-	label: string;
+	label: ReactNode;
 	align?: "left" | "center" | "right";
 	render?: never;
 }
 
 interface RenderTableColumn<T> {
 	key: string;
-	label: string;
+	label: ReactNode;
 	align?: "left" | "center" | "right";
 	render: (row: T) => ReactNode;
 }
@@ -64,25 +64,47 @@ const Table = <T,>({
 			component={Paper}
 			elevation={0}
 			sx={{
-				backgroundColor: "#f5f5f5",
+				backgroundColor: "#fff",
 				maxWidth: "100%",
 				overflowX: "auto",
+				border: "1px solid #e5e7eb",
+				borderRadius: "8px",
 			}}
 		>
 			<MuiTable sx={{ minWidth: 640 }}>
 				<TableHead>
-					<TableRow>
+					<TableRow
+						sx={{
+							backgroundColor: "#f8fafc",
+						}}
+					>
 						{columns.map((column) => (
 							<TableCell
 								key={String(column.key)}
 								align={column.align ?? "left"}
+								sx={{
+									color: "#374151",
+									fontSize: "0.78rem",
+									fontWeight: 700,
+									borderBottom: "1px solid #d1d5db",
+								}}
 							>
 								{column.label}
 							</TableCell>
 						))}
 
 						{actions.length > 0 && (
-							<TableCell align="center">Ações</TableCell>
+							<TableCell
+								align="center"
+								sx={{
+									color: "#374151",
+									fontSize: "0.78rem",
+									fontWeight: 700,
+									borderBottom: "1px solid #d1d5db",
+								}}
+							>
+								Ações
+							</TableCell>
 						)}
 					</TableRow>
 				</TableHead>
@@ -95,10 +117,13 @@ const Table = <T,>({
 								hover
 								sx={{
 									"&:nth-of-type(odd)": {
-										backgroundColor: "#f1f1f1",
+										backgroundColor: "#ffffff",
 									},
 									"&:nth-of-type(even)": {
-										backgroundColor: "#f5f5f5",
+										backgroundColor: "#f9fafb",
+									},
+									"&:hover": {
+										backgroundColor: "#f3f4f6 !important",
 									},
 								}}
 							>
@@ -106,6 +131,10 @@ const Table = <T,>({
 									<TableCell
 										key={String(column.key)}
 										align={column.align ?? "left"}
+										sx={{
+											borderBottom: "1px solid #e5e7eb",
+											color: "#374151",
+										}}
 									>
 										{column.render
 											? column.render(row)

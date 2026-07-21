@@ -2,7 +2,8 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import type { PersonSummary } from "../types/summary";
-import { formatCurrency } from "../utils/currency";
+import { formatCurrency, formatNegativeCurrency } from "../utils/currency";
+import SignedAmount from "./SignedAmount";
 
 interface OverviewPanelProps {
 	summary: PersonSummary[];
@@ -48,7 +49,10 @@ const OverviewPanel = ({ summary }: OverviewPanelProps) => {
 						</div>
 					</div>
 
-					<span className="expense-value">{formatCurrency(totalExpenses)}</span>
+					<span className="expense-value">
+						<TrendingDownIcon className="summary-value__icon" />
+						{formatNegativeCurrency(totalExpenses)}
+					</span>
 				</div>
 
 				<div className="overview-item">
@@ -60,14 +64,12 @@ const OverviewPanel = ({ summary }: OverviewPanelProps) => {
 						</div>
 					</div>
 
-					<span
+					<SignedAmount
+						value={totalBalance}
 						className={
 							totalBalance >= 0 ? "positive-balance" : "negative-balance"
 						}
-					>
-						{totalBalance >= 0 ? "Positivo: " : "Negativo: "}
-						{formatCurrency(totalBalance)}
-					</span>
+					/>
 				</div>
 			</div>
 		</section>

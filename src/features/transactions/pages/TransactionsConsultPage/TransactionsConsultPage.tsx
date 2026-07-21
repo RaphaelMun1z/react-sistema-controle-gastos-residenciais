@@ -6,16 +6,27 @@ import Table, { type TableColumn } from "../../../../shared/components/Table/Tab
 
 // Componentes do Material UI
 import { Button, Pagination } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Ícones
 import AddIcon from "@mui/icons-material/Add";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
+import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 
 // React Router
 import { Link } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
-import { useTransactions } from "../../hooks/useTransactions";
-import type { Transaction } from "../../types/transaction";
+import {
+	transactionsQueryKey,
+	useTransactions,
+} from "../../hooks/useTransactions";
+import { transactionsService } from "../../services/transactionsService";
+import { TransactionType, type Transaction } from "../../types/transaction";
 import { transactionTypeLabels } from "../../utils/transactionLabels";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../../shared/components/DataState/EmptyState";
@@ -23,6 +34,37 @@ import TableSkeleton from "../../../../shared/components/skeletons/TableSkeleton
 import { getApiErrorFeedback } from "../../../../shared/api/apiError";
 import walletImage from "../../../../assets/images/wallet.png";
 import { useAllPeople } from "../../../people/hooks/usePeople";
+import { formatCurrency } from "../../../summary/utils/currency";
+
+const columnHeader = (icon: ReactNode, label: string) => (
+	<span className="table-column-header">
+		{icon}
+		{label}
+	</span>
+);
+
+const cellWithIcon = (icon: ReactNode, value: ReactNode) => (
+	<span className="table-cell-detail">
+		{icon}
+		<span>{value}</span>
+	</span>
+);
+
+const transactionTypeBadge = (transaction: Transaction) => {
+	const isRevenue = transaction.type === TransactionType.Revenue;
+	const Icon = isRevenue ? ArrowUpwardIcon : ArrowDownwardIcon;
+
+	return (
+		<span
+			className={`transaction-type-badge ${
+				isRevenue ? "is-revenue" : "is-expense"
+			}`}
+		>
+			<Icon fontSize="small" />
+			{transactionTypeLabels[transaction.type]}
+		</span>
+	);
+};
 
 // Cabeçalho da página
 const TransactionsConsultHeaderData = {
@@ -36,33 +78,42 @@ const TransactionsConsultHeaderData = {
 const columns: TableColumn<Transaction>[] = [
 	{
 		key: "person",
-		label: "Pessoa",
+		label: columnHeader(<PersonOutlinedIcon fontSize="small" />, "Pessoa"),
 		render: (transaction) => transaction.personId,
 	},
 	{
 		key: "description",
-		label: "Descrição",
+		label: columnHeader(
+			<DescriptionOutlinedIcon fontSize="small" />,
+			"Descrição",
+		),
+		render: (transaction) =>
+			cellWithIcon(
+				<DescriptionOutlinedIcon fontSize="small" />,
+				transaction.description,
+			),
 	},
 	{
 		key: "type",
-		label: "Tipo",
-		render: (transaction) => transactionTypeLabels[transaction.type],
+		label: columnHeader(<SwapVertIcon fontSize="small" />, "Tipo"),
+		render: transactionTypeBadge,
 	},
 	{
 		key: "amount",
-		label: "Valor",
+		label: columnHeader(<PaymentsOutlinedIcon fontSize="small" />, "Valor"),
 		align: "right",
 		render: (transaction) =>
-			transaction.amount.toLocaleString("pt-BR", {
-				style: "currency",
-				currency: "BRL",
-			}),
+			cellWithIcon(
+				<PaymentsOutlinedIcon fontSize="small" />,
+				formatCurrency(transaction.amount),
+			),
 	},
 ];
 
 const TransactionsConsultPage = () => {
 	const [page, setPage] = useState(1);
 	const pageSize = 10;
+	const queryClient = useQueryClient();
 	const {
 		data,
 		error,
@@ -80,10 +131,26 @@ const TransactionsConsultPage = () => {
 			? {
 					...column,
 					render: (transaction) =>
-						peopleById.get(transaction.personId) ?? transaction.personId,
+						cellWithIcon(
+							<PersonOutlinedIcon fontSize="small" />,
+							peopleById.get(transaction.personId) ?? transaction.personId,
+						),
 				}
 			: column,
 	);
+
+	useEffect(() => {
+		const totalPages = data?.totalPages ?? 0;
+		const nextPage = page + 1;
+
+		if (nextPage <= totalPages) {
+			void queryClient.prefetchQuery({
+				queryKey: [...transactionsQueryKey, nextPage, pageSize] as const,
+				queryFn: () =>
+					transactionsService.getTransactions({ page: nextPage, pageSize }),
+			});
+		}
+	}, [data?.totalPages, page, pageSize, queryClient]);
 
 	return (
 		<section className="transactions-consult-page">
@@ -100,7 +167,11 @@ const TransactionsConsultPage = () => {
 				</Button>
 			</div>
 
-			<div className="transactions-consult-page__table">
+			<div
+				className={`transactions-consult-page__table ${
+					isFetching && transactions.length > 0 ? "is-fetching" : ""
+				}`.trim()}
+			>
 				{isLoading && <TableSkeleton columns={columns.length} rows={6} />}
 
 				{isError && (

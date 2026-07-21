@@ -4,7 +4,8 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import type { PersonSummary } from "../types/summary";
-import { formatCurrency } from "../utils/currency";
+import { formatCurrency, formatNegativeCurrency } from "../utils/currency";
+import SignedAmount from "./SignedAmount";
 
 interface PersonSummaryCardProps {
 	person: PersonSummary;
@@ -60,7 +61,8 @@ const PersonSummaryCard = ({ person }: PersonSummaryCardProps) => {
 					</div>
 
 					<span className="summary-value expense-value">
-						- {formatCurrency(person.expenses)}
+						<TrendingDownIcon className="summary-value__icon" />
+						{formatNegativeCurrency(person.expenses)}
 					</span>
 				</div>
 
@@ -75,14 +77,12 @@ const PersonSummaryCard = ({ person }: PersonSummaryCardProps) => {
 						</div>
 					</div>
 
-					<span
+					<SignedAmount
+						value={balance}
 						className={`summary-value ${
 							balance >= 0 ? "positive-balance" : "negative-balance"
 						}`}
-					>
-						{balance >= 0 ? "Positivo: " : "Negativo: "}
-						{formatCurrency(balance)}
-					</span>
+					/>
 				</div>
 			</div>
 		</article>

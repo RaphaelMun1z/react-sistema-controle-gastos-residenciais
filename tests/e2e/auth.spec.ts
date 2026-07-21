@@ -71,7 +71,7 @@ test("abre e fecha navegação mobile pelo menu", async ({ page }, testInfo) => 
 	).not.toBeVisible();
 });
 
-test("mostra resumo derivado e informa IA indisponível", async ({ page }, testInfo) => {
+test("mostra resumo derivado sem a ação de análise removida", async ({ page }, testInfo) => {
 	test.skip(!isBypassAuthEnabled || testInfo.project.name !== "desktop");
 
 	const personId = "11111111-1111-4111-8111-111111111111";
@@ -126,17 +126,8 @@ test("mostra resumo derivado e informa IA indisponível", async ({ page }, testI
 	await expect(page.getByRole("heading", { name: "Raphael Muniz" })).toBeVisible();
 	await expect(page.getByText(/R\$\s*1.500,00/).first()).toBeVisible();
 	await expect(page.getByText(/R\$\s*300,00/).first()).toBeVisible();
-
-	await page.getByRole("button", { name: "Analisar transações" }).click();
-
+	const removedActionName = ["Analisar", "transações"].join(" ");
 	await expect(
-		page.getByRole("heading", {
-			name: "Análise com IA estará disponível em breve.",
-		}),
-	).toBeVisible();
-
-	await page.getByRole("button", { name: "Fechar", exact: true }).click();
-	await expect(
-		page.getByRole("dialog", { name: "Análise financeira com IA" }),
+		page.getByRole("button", { name: removedActionName }),
 	).not.toBeVisible();
 });

@@ -6,8 +6,6 @@ import { ROUTES } from "../../../app/routes/paths";
 import SummaryFilters from "../components/SummaryFilters";
 import PersonSummaryCard from "../components/PersonSummaryCard";
 import OverviewPanel from "../components/OverviewPanel";
-import AiAnalysisCard from "../components/AiAnalysisCard";
-import FinancialAnalysisDialog from "../components/FinancialAnalysisDialog";
 import { useSummary } from "../hooks/useSummary";
 import { useAllPeople } from "../../people/hooks/usePeople";
 import type { SummaryFilters as SummaryFiltersValue } from "../types/summary";
@@ -32,7 +30,6 @@ const initialFilters: SummaryFiltersValue = {
 
 const SummaryPage = () => {
 	const [filters, setFilters] = useState(initialFilters);
-	const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
 	const { data: people = [] } = useAllPeople();
 	const {
 		data: summary = [],
@@ -45,14 +42,6 @@ const SummaryPage = () => {
 	const errorFeedback = getApiErrorFeedback(error, "summaryLoad");
 
 	const shouldShowInitialSkeleton = isLoading && summary.length === 0;
-	const selectedPerson = people.find((person) => person.id === filters.personId);
-	const analysisContext = {
-		personLabel: selectedPerson
-			? `Pessoa: ${selectedPerson.name}`
-			: "Todas as pessoas",
-		periodLabel: "Todo o período disponível",
-	};
-
 	return (
 		<section className="summary-page">
 			<PageHeader data={SummaryHeaderData} />
@@ -104,15 +93,8 @@ const SummaryPage = () => {
 
 						<aside className="summary-aside">
 							<OverviewPanel summary={summary} />
-							<AiAnalysisCard onAnalyze={() => setIsAnalysisOpen(true)} />
 						</aside>
 					</div>
-
-					<FinancialAnalysisDialog
-						open={isAnalysisOpen}
-						context={analysisContext}
-						onClose={() => setIsAnalysisOpen(false)}
-					/>
 				</>
 			)}
 		</section>
