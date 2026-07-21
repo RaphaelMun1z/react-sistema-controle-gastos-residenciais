@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { TransactionType } from "../types/transaction";
 import { transactionSchema } from "./transactionSchema";
+
+const personId = "11111111-1111-4111-8111-111111111111";
 
 describe("transactionSchema", () => {
 	it("aceita uma transação válida", () => {
 		const result = transactionSchema.safeParse({
-			personId: 1,
-			type: "expense",
+			personId,
+			type: TransactionType.Expense,
 			description: "Energia",
-			value: 120,
-			category: "Moradia",
-			date: "2026-07-18",
-			observation: "",
+			amount: 120,
 		});
 
 		expect(result.success).toBe(true);
@@ -18,12 +18,10 @@ describe("transactionSchema", () => {
 
 	it("rejeita valor negativo", () => {
 		const result = transactionSchema.safeParse({
-			personId: 1,
-			type: "expense",
+			personId,
+			type: TransactionType.Expense,
 			description: "Energia",
-			value: -120,
-			category: "Moradia",
-			date: "2026-07-18",
+			amount: -120,
 		});
 
 		expect(result.success).toBe(false);

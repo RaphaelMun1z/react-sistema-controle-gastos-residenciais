@@ -8,13 +8,13 @@ describe("OverviewPanel", () => {
 			<OverviewPanel
 				summary={[
 					{
-						personId: 1,
+						personId: "11111111-1111-4111-8111-111111111111",
 						personName: "Pessoa A",
 						income: 1000,
 						expenses: 400,
 					},
 					{
-						personId: 2,
+						personId: "22222222-2222-4222-8222-222222222222",
 						personName: "Pessoa B",
 						income: 500,
 						expenses: 200,

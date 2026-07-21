@@ -5,27 +5,47 @@ import { describe, expect, it, vi } from "vitest";
 import { API_ENDPOINTS } from "../../../../shared/api/apiEndpoints";
 import { renderWithProviders } from "../../../../test/renderWithProviders";
 import { server } from "../../../../test/server";
+import { TransactionType } from "../../types/transaction";
 import TransactionRegisterPage from "./TransactionRegisterPage";
+
+const adultPersonId = "11111111-1111-4111-8111-111111111111";
+const underAgePersonId = "22222222-2222-4222-8222-222222222222";
 
 const people = [
 	{
-		id: 1,
+		id: adultPersonId,
 		name: "Maria Souza",
-		email: "maria@email.com",
+		birthDate: "1994-07-18",
 		age: 32,
 	},
 	{
-		id: 2,
+		id: underAgePersonId,
 		name: "Joao Souza",
-		email: "joao@email.com",
+		birthDate: "2011-07-18",
 		age: 15,
 	},
 ];
 
+const pagedPeople = {
+	content: people,
+	page: 1,
+	pageSize: 100,
+	totalElements: 2,
+	totalPages: 1,
+};
+
 describe("TransactionRegisterPage", () => {
 	it("exibe estado vazio quando nao ha pessoas cadastradas", async () => {
 		server.use(
-			http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json([])),
+			http.get(`*${API_ENDPOINTS.people}`, () =>
+				HttpResponse.json({
+					content: [],
+					page: 1,
+					pageSize: 100,
+					totalElements: 0,
+					totalPages: 0,
+				}),
+			),
 		);
 
 		renderWithProviders(<TransactionRegisterPage />);
@@ -41,34 +61,30 @@ describe("TransactionRegisterPage", () => {
 		async () => {
 			const createTransactionHandler = vi.fn(async ({ request }) => {
 				const body = (await request.json()) as {
-					personId: number;
-					type: string;
+					personId: string;
+					type: number;
 					description: string;
-					value: number;
-					category: string;
-					date: string;
-					observation?: string;
+					amount: number;
 				};
 
 				expect(body).toEqual({
-					personId: 2,
-					type: "expense",
+					personId: underAgePersonId,
+					type: TransactionType.Expense,
 					description: "Mesada",
-					value: 50,
-					category: "Outros",
-					date: "2026-07-18",
-					observation: "",
+					amount: 50,
 				});
 
 				return HttpResponse.json({
-					id: 1,
-					personName: "Joao Souza",
-					...body,
+					data: {
+						id: "33333333-3333-4333-8333-333333333333",
+						...body,
+					},
+					links: {},
 				});
 			});
 
 			server.use(
-				http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json(people)),
+				http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json(pagedPeople)),
 				http.post(`*${API_ENDPOINTS.transactions}`, createTransactionHandler),
 			);
 
@@ -93,9 +109,6 @@ describe("TransactionRegisterPage", () => {
 			await userEvent.type(screen.getByLabelText("Descrição"), "Mesada");
 			await userEvent.clear(screen.getByLabelText("Valor"));
 			await userEvent.type(screen.getByLabelText("Valor"), "50");
-			await userEvent.click(screen.getByLabelText("Categoria"));
-			await userEvent.click(screen.getByRole("option", { name: "Outros" }));
-			await userEvent.type(screen.getByLabelText("Data"), "2026-07-18");
 			await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
 
 			await waitFor(() => {

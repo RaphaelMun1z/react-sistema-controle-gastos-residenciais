@@ -5,26 +5,50 @@ import { describe, expect, it, vi } from "vitest";
 import { API_ENDPOINTS } from "../../../../shared/api/apiEndpoints";
 import { renderWithProviders } from "../../../../test/renderWithProviders";
 import { server } from "../../../../test/server";
+import { TransactionType } from "../../types/transaction";
 import TransactionsConsultPage from "./TransactionsConsultPage";
 
+const personId = "11111111-1111-4111-8111-111111111111";
+
 const transaction = {
-	id: 1,
-	personId: 1,
-	personName: "Maria Souza",
+	id: "22222222-2222-4222-8222-222222222222",
+	personId,
 	description: "Salario",
-	category: "Outros",
-	type: "income",
-	value: 1500,
-	date: "2026-07-18",
+	type: TransactionType.Revenue,
+	amount: 1500,
+};
+
+const pagedTransactions = {
+	content: [transaction],
+	page: 1,
+	pageSize: 10,
+	totalElements: 1,
+	totalPages: 1,
+};
+
+const pagedPeople = {
+	content: [
+		{
+			id: personId,
+			name: "Maria Souza",
+			birthDate: "1994-07-18",
+			age: 32,
+		},
+	],
+	page: 1,
+	pageSize: 100,
+	totalElements: 1,
+	totalPages: 1,
 };
 
 describe("TransactionsConsultPage", () => {
 	it("exibe loading e renderiza transacoes retornadas pela API", async () => {
 		server.use(
+			http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json(pagedPeople)),
 			http.get(`*${API_ENDPOINTS.transactions}`, async () => {
 				await new Promise((resolve) => globalThis.setTimeout(resolve, 100));
 
-				return HttpResponse.json([transaction]);
+				return HttpResponse.json(pagedTransactions);
 			}),
 		);
 
@@ -41,7 +65,16 @@ describe("TransactionsConsultPage", () => {
 
 	it("renderiza estado vazio quando a API retorna lista vazia", async () => {
 		server.use(
-			http.get(`*${API_ENDPOINTS.transactions}`, () => HttpResponse.json([])),
+			http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json(pagedPeople)),
+			http.get(`*${API_ENDPOINTS.transactions}`, () =>
+				HttpResponse.json({
+					content: [],
+					page: 1,
+					pageSize: 10,
+					totalElements: 0,
+					totalPages: 0,
+				}),
+			),
 		);
 
 		renderWithProviders(<TransactionsConsultPage />);
@@ -55,9 +88,12 @@ describe("TransactionsConsultPage", () => {
 		const transactionsHandler = vi
 			.fn()
 			.mockImplementationOnce(() => HttpResponse.error())
-			.mockImplementationOnce(() => HttpResponse.json([transaction]));
+			.mockImplementationOnce(() => HttpResponse.json(pagedTransactions));
 
-		server.use(http.get(`*${API_ENDPOINTS.transactions}`, transactionsHandler));
+		server.use(
+			http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json(pagedPeople)),
+			http.get(`*${API_ENDPOINTS.transactions}`, transactionsHandler),
+		);
 
 		renderWithProviders(<TransactionsConsultPage />);
 

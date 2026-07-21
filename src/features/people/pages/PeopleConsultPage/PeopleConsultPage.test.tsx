@@ -13,6 +13,22 @@ import {
 import { server } from "../../../../test/server";
 import PeopleConsultPage from "./PeopleConsultPage";
 
+const personId = "11111111-1111-4111-8111-111111111111";
+const pagedPeople = {
+	content: [
+		{
+			id: personId,
+			name: "Raphael Muniz",
+			birthDate: "2001-07-18",
+			age: 25,
+		},
+	],
+	page: 1,
+	pageSize: 10,
+	totalElements: 1,
+	totalPages: 1,
+};
+
 const renderWithRouteFeedback = (ui: ReactElement) => {
 	const queryClient = createTestQueryClient();
 
@@ -36,14 +52,7 @@ describe("PeopleConsultPage", () => {
 	it("renderiza pessoas retornadas pela API", async () => {
 		server.use(
 			http.get(`*${API_ENDPOINTS.people}`, () =>
-				HttpResponse.json([
-					{
-						id: 1,
-						name: "Raphael Muniz",
-						email: "raphael@email.com",
-						age: 25,
-					},
-				]),
+				HttpResponse.json(pagedPeople),
 			),
 		);
 
@@ -55,7 +64,15 @@ describe("PeopleConsultPage", () => {
 
 	it("renderiza estado vazio quando a API retorna lista vazia", async () => {
 		server.use(
-			http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json([])),
+			http.get(`*${API_ENDPOINTS.people}`, () =>
+				HttpResponse.json({
+					content: [],
+					page: 1,
+					pageSize: 10,
+					totalElements: 0,
+					totalPages: 0,
+				}),
+			),
 		);
 
 		renderWithProviders(<PeopleConsultPage />);
@@ -69,16 +86,7 @@ describe("PeopleConsultPage", () => {
 		const peopleHandler = vi
 			.fn()
 			.mockImplementationOnce(() => HttpResponse.error())
-			.mockImplementationOnce(() =>
-				HttpResponse.json([
-					{
-						id: 1,
-						name: "Raphael Muniz",
-						email: "raphael@email.com",
-						age: 25,
-					},
-				]),
-			);
+			.mockImplementationOnce(() => HttpResponse.json(pagedPeople));
 
 		server.use(http.get(`*${API_ENDPOINTS.people}`, peopleHandler));
 
@@ -112,16 +120,9 @@ describe("PeopleConsultPage", () => {
 
 		server.use(
 			http.get(`*${API_ENDPOINTS.people}`, () =>
-				HttpResponse.json([
-					{
-						id: 1,
-						name: "Raphael Muniz",
-						email: "raphael@email.com",
-						age: 25,
-					},
-				]),
+				HttpResponse.json(pagedPeople),
 			),
-			http.delete(`*${API_ENDPOINTS.personById(1)}`, deletePersonHandler),
+			http.delete(`*${API_ENDPOINTS.personById(personId)}`, deletePersonHandler),
 		);
 
 		renderWithProviders(<PeopleConsultPage />);
@@ -144,7 +145,15 @@ describe("PeopleConsultPage", () => {
 
 	it("exibe feedback de sucesso recebido do cadastro de pessoa", async () => {
 		server.use(
-			http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json([])),
+			http.get(`*${API_ENDPOINTS.people}`, () =>
+				HttpResponse.json({
+					content: [],
+					page: 1,
+					pageSize: 10,
+					totalElements: 0,
+					totalPages: 0,
+				}),
+			),
 		);
 
 		renderWithRouteFeedback(<PeopleConsultPage />);

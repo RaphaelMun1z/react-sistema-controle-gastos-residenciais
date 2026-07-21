@@ -5,18 +5,16 @@ describe("personSchema", () => {
 	it("aceita uma pessoa válida", () => {
 		const result = personSchema.safeParse({
 			name: "Maria",
-			email: "maria@email.com",
-			age: 32,
+			birthDate: "1994-07-18",
 		});
 
 		expect(result.success).toBe(true);
 	});
 
-	it("rejeita idade inválida", () => {
+	it("rejeita data inválida", () => {
 		const result = personSchema.safeParse({
 			name: "Maria",
-			email: "maria@email.com",
-			age: 0,
+			birthDate: "",
 		});
 
 		expect(result.success).toBe(false);

@@ -14,6 +14,7 @@ describe("authSchemas", () => {
 	it("rejeita cadastro com confirmação de senha divergente", () => {
 		const result = signUpSchema.safeParse({
 			name: "Raphael",
+			birthDate: "2001-07-18",
 			email: "raphael@email.com",
 			password: "12345678",
 			confirmPassword: "87654321",

@@ -71,69 +71,69 @@ test("abre e fecha navegação mobile pelo menu", async ({ page }, testInfo) => 
 	).not.toBeVisible();
 });
 
-test("executa fluxo da análise financeira com IA", async ({ page }, testInfo) => {
+test("mostra resumo derivado e informa IA indisponível", async ({ page }, testInfo) => {
 	test.skip(!isBypassAuthEnabled || testInfo.project.name !== "desktop");
 
-	await page.route("**/api/people", async (route) => {
-		await route.fulfill({
-			json: [
-				{
-					id: 1,
-					name: "Raphael Muniz",
-					email: "raphael@email.com",
-					age: 25,
-				},
-			],
-		});
-	});
+	const personId = "11111111-1111-4111-8111-111111111111";
 
-	await page.route("**/api/summary/analysis", async (route) => {
-		await new Promise((resolve) => setTimeout(resolve, 300));
-
+	await page.route("**/api/v1/people**", async (route) => {
 		await route.fulfill({
 			json: {
-				summary: "Análise gerada pelo backend de teste.",
-				positives: [
+				content: [
 					{
-						title: "Saldo positivo",
-						description: "As receitas superaram as despesas no período.",
+						id: personId,
+						name: "Raphael Muniz",
+						birthDate: "2001-07-18",
+						age: 25,
 					},
 				],
-				warnings: [],
-				recommendations: [
-					{
-						title: "Acompanhe categorias",
-						description: "Revise seus gastos recorrentes mensalmente.",
-					},
-				],
+				page: 1,
+				pageSize: 100,
+				totalElements: 1,
+				totalPages: 1,
 			},
 		});
 	});
 
-	await page.route(/\/api\/summary(\?.*)?$/, async (route) => {
+	await page.route("**/api/v1/transactions**", async (route) => {
 		await route.fulfill({
-			json: [
-				{
-					personId: 1,
-					personName: "Raphael Muniz",
-					income: 1500,
-					expenses: 300,
-				},
-			],
+			json: {
+				content: [
+					{
+						id: "22222222-2222-4222-8222-222222222222",
+						personId,
+						amount: 1500,
+						type: 1,
+						description: "Salário",
+					},
+					{
+						id: "33333333-3333-4333-8333-333333333333",
+						personId,
+						amount: 300,
+						type: 0,
+						description: "Mercado",
+					},
+				],
+				page: 1,
+				pageSize: 100,
+				totalElements: 2,
+				totalPages: 1,
+			},
 		});
 	});
 
 	await page.goto("/resumo");
 	await expect(page.getByRole("heading", { name: "Raphael Muniz" })).toBeVisible();
+	await expect(page.getByText(/R\$\s*1.500,00/).first()).toBeVisible();
+	await expect(page.getByText(/R\$\s*300,00/).first()).toBeVisible();
 
 	await page.getByRole("button", { name: "Analisar transações" }).click();
 
 	await expect(
-		page.getByRole("status", { name: "Analisando suas finanças" }),
+		page.getByRole("heading", {
+			name: "Análise com IA estará disponível em breve.",
+		}),
 	).toBeVisible();
-	await expect(page.getByText("Análise gerada pelo backend de teste.")).toBeVisible();
-	await expect(page.getByText("Saldo positivo")).toBeVisible();
-	await expect(page.getByText("Acompanhe categorias")).toBeVisible();
 
 	await page.getByRole("button", { name: "Fechar", exact: true }).click();
 	await expect(
