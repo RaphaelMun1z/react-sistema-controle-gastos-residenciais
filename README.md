@@ -18,7 +18,7 @@ A API real fica sob `/api/v1` e usa JWT Bearer para endpoints protegidos.
 Configure a base do backend em `.env`:
 
 ```env
-VITE_API_URL=http://localhost:8080/api/v1
+VITE_API_URL=http://localhost:7201/api/v1
 VITE_BYPASS_AUTH=false
 ```
 
