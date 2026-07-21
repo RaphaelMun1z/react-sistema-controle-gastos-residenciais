@@ -1,149 +1,97 @@
 # Sistema de Controle de Gastos Residenciais
 
-![Versão](https://img.shields.io/github/v/tag/RaphaelMun1z/react-sistema-controle-gastos-residenciais?include_prereleases&sort=semver&label=vers%C3%A3o)
+Frontend React/TypeScript para consumir o backend .NET do sistema de controle de gastos residenciais.
 
-![React](https://img.shields.io/badge/React-19.2.7-61DAFB?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-6.0.2-3178C6?logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-8.1.1-646CFF?logo=vite&logoColor=white)
-![ESLint](https://img.shields.io/badge/ESLint-10.6.0-4B32C3?logo=eslint&logoColor=white)
+## Stack
 
-## Tecnologias utilizadas
-
-- React
-- TypeScript
-- Vite
+- React 19, TypeScript e Vite
 - Material UI
-- SCSS
 - React Router
-- React Hook Form
-- Zod
 - TanStack Query
-- Context API
-- Vitest
-- React Testing Library
-- MSW
-- Playwright
-- ESLint
-- Prettier
+- React Hook Form + Zod
+- Vitest, React Testing Library, MSW e Playwright
 
-## Arquitetura do projeto
+## Backend
 
-```text
-src/
-├── app/
-│   ├── providers/
-│   ├── query/
-│   ├── theme/
-│   └── routes
-├── shared/
-│   ├── api/
-│   └── components/
-└── features/
-    ├── authentication/
-    ├── people/
-    ├── transactions/
-    └── summary/
+A API real fica sob `/api/v1` e usa JWT Bearer para endpoints protegidos.
+
+Configure a base do backend em `.env`:
+
+```env
+VITE_API_URL=http://localhost:8080/api/v1
+VITE_BYPASS_AUTH=false
 ```
 
-## Funcionalidades
+`VITE_BYPASS_AUTH=true` existe apenas para desenvolvimento local e testes controlados. A autenticação real permanece implementada.
 
-- Autenticação preparada para API REST com sessão via cookies.
-- Rotas públicas e privadas.
-- Cadastro e consulta de pessoas.
-- Cadastro e consulta de transações.
-- Resumo financeiro por pessoa.
-- Filtros por pessoa e período.
-- Visão geral de receitas, despesas e saldo.
-- Interface preparada para análise financeira por IA.
-- Estados de loading, erro e vazio.
-- Confirmação antes de exclusões.
+## Contratos Consumidos
 
-## Formulários
+- `POST /auth/register`: cria usuário, pessoa e conta. Envia `name`, `birthDate`, `email`, `password`.
+- `POST /auth/login`: recebe `accessToken` e `expiresAt`.
+- `GET /people?page&pageSize`: retorna `PagedResponse<Person>`.
+- `POST /people`: cadastro administrativo de pessoa com `name` e `birthDate`.
+- `DELETE /people/{id}`: exclui pessoa por UUID.
+- `GET /transactions?page&pageSize`: retorna `PagedResponse<Transaction>`.
+- `POST /transactions`: cria transação com `personId`, `amount`, `type`, `description`.
+- `GET /transactions/person/{personId}?page&pageSize`: disponível no service para uso futuro.
 
-Os formulários utilizam React Hook Form com Zod para controle de estado,
-validação, mensagens de erro e controle de submissão.
+Criações e buscas individuais que retornam HATEOAS são mapeadas como `Resource<T>` no service, mantendo os componentes sem acoplamento ao wrapper.
 
-## Gerenciamento de dados
+## Auth
 
-- Context API é utilizada para autenticação e estado global relacionado à sessão.
-- TanStack Query é utilizado para dados assíncronos, cache, mutations e invalidação.
-- Os dados são consumidos por services preparados para uma API REST real.
-- Sem backend compatível em execução, a aplicação exibe estados de indisponibilidade de forma controlada.
+O login armazena o JWT e o `expiresAt` de forma centralizada. Requisições protegidas recebem `Authorization: Bearer <token>` no cliente HTTP.
 
-## Inspirações de design
+Quando a sessão expira ou uma rota protegida retorna `401`, o token é limpo e o usuário deve entrar novamente. Não há refresh token no contrato atual.
 
-| Inspiração 01                                                                                                                                            | Inspiração 02                                                                                                                                            |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ![Inspiração de design](https://cdn.dribbble.com/userupload/48074272/file/9ded7c9f0f4174a9b95de7714843bbd5.png?resize=1024x768&vertical=center)          | ![Inspiração de design](https://cdn.dribbble.com/userupload/11344410/file/original-4e7176480f783d620ca109d0727a6191.png?resize=1024x768&vertical=center) |
-| Inspiração 03                                                                                                                                            | Inspiração 04                                                                                                                                            |
-| ![Inspiração de design](https://cdn.dribbble.com/userupload/43378691/file/original-c32d272e64d0a2144e44180739d569a3.png?resize=1024x714&vertical=center) | ![Inspiração de design](https://cdn.dribbble.com/userupload/42176526/file/original-ef593d29153ba02c3b5f7f9bb9cd0387.jpg?resize=1000x750&vertical=center) |
+Armazenar JWT no browser tem implicações de segurança; esta implementação segue o contrato atual do backend, que retorna o token no corpo da resposta e não expõe cookie HttpOnly.
 
-## Bibliotecas
+## Pessoas
 
-### Material UI e Material Icons
+IDs são UUID/string. O cadastro administrativo de pessoa não envia e-mail, senha ou idade. A API recebe `birthDate` e retorna `age`, usado nas listagens e na regra de menor de idade.
 
-Optei por utilizar uma biblioteca de componentes e ícones para acelerar o processo de desenvolvimento, aproveitando recursos de qualidade, responsivos, testados e visualmente agradáveis ao usuário.
+## Transações
 
-### React Hook Form e Zod
+O enum real do backend é:
 
-Utilizados para estruturar os formulários com validação, mensagens por campo e controle de submissão.
+- `0`: Despesa (`Expense`)
+- `1`: Receita (`Revenue`)
 
-### TanStack Query
+O frontend centraliza esse mapeamento e não envia strings como `income`/`expense`.
 
-Utilizado para organizar o gerenciamento de dados assíncronos, cache e invalidação de consultas.
+O contrato atual não possui update/delete de transações. A interface não expõe essas ações.
 
-## Testes
+## Resumo
 
-O projeto possui testes unitários e de componentes com Vitest e React Testing Library, além de configuração para testes E2E com Playwright.
+O backend atual não possui endpoint dedicado de resumo financeiro. O frontend mantém a tela agregando dados localmente a partir de todas as páginas de pessoas e transações carregadas pela API.
 
-```bash
-npm test
-npm run test:e2e
-```
+Filtros por período estão desabilitados porque o contrato de transações atual não retorna data nem aceita `startDate`/`endDate`.
 
-## Qualidade
+## IA
 
-O projeto utiliza ESLint, Prettier, build com Vite e CI via GitHub Actions para validar lint, testes e build.
+O backend atual não possui endpoint de análise financeira por IA. A UI informa que o recurso estará disponível em breve e não faz chamada fictícia.
 
-```bash
-npm run lint
-npm run format
-npm run build
-```
-
-## Como executar
+## Executar
 
 ```bash
 npm install
 npm run dev
 ```
 
-Outros comandos disponíveis:
+Execute o backend .NET separadamente e garanta que o CORS permita a origem do Vite.
+
+## Validação
 
 ```bash
-npm run build
 npm run lint
+npm run build
 npm test
 npm run test:e2e
-npm run preview
 ```
 
-## Variáveis de ambiente
+## Possíveis Melhorias No Backend
 
-A URL da API REST é configurada pela variável `VITE_API_URL`.
-
-```env
-VITE_API_URL=http://localhost:8080/api
-```
-
-Use o arquivo `.env.example` como referência. Não inclua segredos no frontend.
-
-## Integração com backend
-
-O frontend está preparado para consumir endpoints REST de autenticação, pessoas, transações e resumo financeiro. Atualmente é necessário executar um backend compatível para obter dados reais.
-
-Quando a API não está disponível, as telas exibem mensagens amigáveis de erro e ação para tentar novamente, sem utilizar mocks de runtime.
-
-## Status atual
-
-O projeto ainda está em desenvolvimento e preparado para futura integração com uma API REST real compatível com os endpoints configurados na camada de services.
+- Endpoint agregado de resumo financeiro.
+- Filtros server-side por período.
+- Endpoint de análise financeira por IA.
+- Busca/autocomplete de pessoas.
+- Refresh token ou estratégia de sessão mais robusta.
