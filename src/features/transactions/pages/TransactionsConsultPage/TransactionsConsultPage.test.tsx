@@ -26,25 +26,9 @@ const pagedTransactions = {
 	totalPages: 1,
 };
 
-const pagedPeople = {
-	content: [
-		{
-			id: personId,
-			name: "Maria Souza",
-			birthDate: "1994-07-18",
-			age: 32,
-		},
-	],
-	page: 1,
-	pageSize: 100,
-	totalElements: 1,
-	totalPages: 1,
-};
-
 describe("TransactionsConsultPage", () => {
 	it("exibe loading e renderiza transacoes retornadas pela API", async () => {
 		server.use(
-			http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json(pagedPeople)),
 			http.get(`*${API_ENDPOINTS.transactions}`, async () => {
 				await new Promise((resolve) => globalThis.setTimeout(resolve, 100));
 
@@ -57,7 +41,7 @@ describe("TransactionsConsultPage", () => {
 		expect(
 			screen.getByRole("status", { name: "Carregando dados" }),
 		).toBeInTheDocument();
-		expect(await screen.findByText("Maria Souza")).toBeInTheDocument();
+		expect(await screen.findByText(personId)).toBeInTheDocument();
 		expect(screen.getByText("Salario")).toBeInTheDocument();
 		expect(screen.getByText("Receita")).toBeInTheDocument();
 		expect(screen.getByText(/R\$\s*1.500,00/)).toBeInTheDocument();
@@ -65,7 +49,6 @@ describe("TransactionsConsultPage", () => {
 
 	it("renderiza estado vazio quando a API retorna lista vazia", async () => {
 		server.use(
-			http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json(pagedPeople)),
 			http.get(`*${API_ENDPOINTS.transactions}`, () =>
 				HttpResponse.json({
 					content: [],
@@ -90,10 +73,7 @@ describe("TransactionsConsultPage", () => {
 			.mockImplementationOnce(() => HttpResponse.error())
 			.mockImplementationOnce(() => HttpResponse.json(pagedTransactions));
 
-		server.use(
-			http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json(pagedPeople)),
-			http.get(`*${API_ENDPOINTS.transactions}`, transactionsHandler),
-		);
+		server.use(http.get(`*${API_ENDPOINTS.transactions}`, transactionsHandler));
 
 		renderWithProviders(<TransactionsConsultPage />);
 
@@ -108,6 +88,47 @@ describe("TransactionsConsultPage", () => {
 		await waitFor(() => {
 			expect(transactionsHandler).toHaveBeenCalledTimes(2);
 		});
-		expect(await screen.findByText("Maria Souza")).toBeInTheDocument();
+		expect(await screen.findByText(personId)).toBeInTheDocument();
+	});
+
+	it("carrega paginas sob demanda e reaproveita cache ao voltar", async () => {
+		const requestedPages: string[] = [];
+
+		server.use(
+			http.get(`*${API_ENDPOINTS.transactions}`, ({ request }) => {
+				const page = new URL(request.url).searchParams.get("page") ?? "1";
+				requestedPages.push(page);
+
+				return HttpResponse.json({
+					content: [
+						{
+							...transaction,
+							id: `${page}${page}${page}${page}${page}${page}${page}${page}-2222-4222-8222-222222222222`,
+							description: `Transacao pagina ${page}`,
+						},
+					],
+					page: Number(page),
+					pageSize: 10,
+					totalElements: 20,
+					totalPages: 20,
+				});
+			}),
+		);
+
+		renderWithProviders(<TransactionsConsultPage />);
+
+		expect(await screen.findByText("Transacao pagina 1")).toBeInTheDocument();
+		expect(requestedPages).toEqual(["1"]);
+
+		await userEvent.click(screen.getByText("2"));
+
+		expect(await screen.findByText("Transacao pagina 2")).toBeInTheDocument();
+		expect(requestedPages).toEqual(["1", "2"]);
+
+		await userEvent.click(screen.getByText("1"));
+
+		expect(await screen.findByText("Transacao pagina 1")).toBeInTheDocument();
+		expect(requestedPages).toEqual(["1", "2"]);
+		expect(requestedPages).not.toContain("3");
 	});
 });

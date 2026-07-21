@@ -5,6 +5,8 @@ import type { PersonSummary, SummaryFilters } from "../types/summary";
 
 export const summaryService = {
 	async getSummary(filters: SummaryFilters): Promise<PersonSummary[]> {
+		// Excecao intencional: o backend ainda nao oferece endpoint agregado para o resumo.
+		// Listagens seguem paginacao sob demanda; aqui precisamos dos dados completos para calcular totais.
 		const [people, transactions] = await Promise.all([
 			peopleService.getAllPeople(),
 			transactionsService.getAllTransactions(),
@@ -13,7 +15,10 @@ export const summaryService = {
 		const summariesByPerson = new Map<string, PersonSummary>();
 
 		for (const transaction of transactions) {
-			if (filters.personId !== "all" && transaction.personId !== filters.personId) {
+			if (
+				filters.personId !== "all" &&
+				transaction.personId !== filters.personId
+			) {
 				continue;
 			}
 

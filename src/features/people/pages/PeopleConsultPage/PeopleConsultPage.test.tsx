@@ -122,7 +122,10 @@ describe("PeopleConsultPage", () => {
 			http.get(`*${API_ENDPOINTS.people}`, () =>
 				HttpResponse.json(pagedPeople),
 			),
-			http.delete(`*${API_ENDPOINTS.personById(personId)}`, deletePersonHandler),
+			http.delete(
+				`*${API_ENDPOINTS.personById(personId)}`,
+				deletePersonHandler,
+			),
 		);
 
 		renderWithProviders(<PeopleConsultPage />);
@@ -161,5 +164,47 @@ describe("PeopleConsultPage", () => {
 		expect(
 			await screen.findByText("Pessoa cadastrada com sucesso."),
 		).toBeInTheDocument();
+	});
+
+	it("carrega paginas sob demanda e reaproveita cache ao voltar", async () => {
+		const requestedPages: string[] = [];
+
+		server.use(
+			http.get(`*${API_ENDPOINTS.people}`, ({ request }) => {
+				const page = new URL(request.url).searchParams.get("page") ?? "1";
+				requestedPages.push(page);
+
+				return HttpResponse.json({
+					content: [
+						{
+							id: `${page}${page}${page}${page}${page}${page}${page}${page}-1111-4111-8111-111111111111`,
+							name: `Pessoa pagina ${page}`,
+							birthDate: "2001-07-18",
+							age: 25,
+						},
+					],
+					page: Number(page),
+					pageSize: 10,
+					totalElements: 20,
+					totalPages: 20,
+				});
+			}),
+		);
+
+		renderWithProviders(<PeopleConsultPage />);
+
+		expect(await screen.findByText("Pessoa pagina 1")).toBeInTheDocument();
+		expect(requestedPages).toEqual(["1"]);
+
+		await userEvent.click(screen.getByText("2"));
+
+		expect(await screen.findByText("Pessoa pagina 2")).toBeInTheDocument();
+		expect(requestedPages).toEqual(["1", "2"]);
+
+		await userEvent.click(screen.getByText("1"));
+
+		expect(await screen.findByText("Pessoa pagina 1")).toBeInTheDocument();
+		expect(requestedPages).toEqual(["1", "2"]);
+		expect(requestedPages).not.toContain("3");
 	});
 });

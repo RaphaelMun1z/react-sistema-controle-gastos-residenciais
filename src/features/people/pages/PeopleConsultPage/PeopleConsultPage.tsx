@@ -9,10 +9,9 @@ import Table, {
 	type TableColumn,
 } from "../../../../shared/components/Table/Table";
 import { Alert, Button, Pagination, Snackbar } from "@mui/material";
-import { useQueryClient } from "@tanstack/react-query";
 import { PersonAdd } from "@mui/icons-material";
 import { useEffect, useState, type ReactNode } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
@@ -22,8 +21,7 @@ import {
 	getApiErrorFeedback,
 	getApiErrorTitle,
 } from "../../../../shared/api/apiError";
-import { peopleQueryKey, useDeletePerson, usePeople } from "../../hooks/usePeople";
-import { peopleService } from "../../services/peopleService";
+import { useDeletePerson, usePeople } from "../../hooks/usePeople";
 import type { Person } from "../../types/person";
 
 interface PeopleConsultLocationState {
@@ -80,17 +78,15 @@ const PeopleConsultHeaderData = {
 const PeopleConsultPage = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
-	const queryClient = useQueryClient();
-	const [page, setPage] = useState(1);
+	const [searchParams, setSearchParams] = useSearchParams();
+	const requestedPage = Number(searchParams.get("page") ?? "1");
+	const page =
+		Number.isInteger(requestedPage) && requestedPage >= 1 ? requestedPage : 1;
 	const pageSize = 10;
-	const {
-		data,
-		error,
-		isError,
-		isLoading,
-		isFetching,
-		refetch,
-	} = usePeople({ page, pageSize });
+	const { data, error, isError, isLoading, isFetching, refetch } = usePeople({
+		page,
+		pageSize,
+	});
 	const people = data?.content ?? [];
 	const errorFeedback = getApiErrorFeedback(error, "peopleList");
 	const deletePerson = useDeletePerson();
@@ -106,16 +102,10 @@ const PeopleConsultPage = () => {
 	}, [location.pathname, navigate, routeFeedback]);
 
 	useEffect(() => {
-		const totalPages = data?.totalPages ?? 0;
-		const nextPage = page + 1;
-
-		if (nextPage <= totalPages) {
-			void queryClient.prefetchQuery({
-				queryKey: [...peopleQueryKey, nextPage, pageSize] as const,
-				queryFn: () => peopleService.getPeople({ page: nextPage, pageSize }),
-			});
+		if (searchParams.get("page") && page !== requestedPage) {
+			setSearchParams({ page: "1" }, { replace: true });
 		}
-	}, [data?.totalPages, page, pageSize, queryClient]);
+	}, [page, requestedPage, searchParams, setSearchParams]);
 
 	const actions: TableAction<Person>[] = [
 		{
@@ -193,7 +183,9 @@ const PeopleConsultPage = () => {
 								className="people-consult-page__pagination"
 								page={page}
 								count={data?.totalPages ?? 1}
-								onChange={(_event, nextPage) => setPage(nextPage)}
+								onChange={(_event, nextPage) =>
+									setSearchParams({ page: String(nextPage) })
+								}
 								color="primary"
 							/>
 						)}

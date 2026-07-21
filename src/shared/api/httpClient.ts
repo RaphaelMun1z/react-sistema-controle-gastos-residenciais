@@ -13,7 +13,9 @@ export const setUnauthorizedHandler = (handler: (() => void) | null) => {
 	onUnauthorized = handler;
 };
 
-const buildQueryString = (params?: Record<string, string | number | undefined>) => {
+const buildQueryString = (
+	params?: Record<string, string | number | undefined>,
+) => {
 	if (!params) {
 		return "";
 	}
@@ -152,7 +154,7 @@ const readProblemDetails = async (
 ): Promise<ProblemDetails | undefined> => {
 	const contentType = response.headers.get("Content-Type");
 
-	if (!contentType?.includes("application/json")) {
+	if (!contentType?.includes("json")) {
 		return undefined;
 	}
 

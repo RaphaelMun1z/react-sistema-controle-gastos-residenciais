@@ -1,6 +1,16 @@
 import "./TransactionRegisterPage.scss";
 
-import { Alert, Button, FormHelperText, FormControl, InputLabel, MenuItem, Select, Skeleton, TextField } from "@mui/material";
+import {
+	Alert,
+	Button,
+	FormHelperText,
+	FormControl,
+	InputLabel,
+	MenuItem,
+	Select,
+	Skeleton,
+	TextField,
+} from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
@@ -8,13 +18,14 @@ import { Link, useNavigate } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	transactionSchema,
 	type TransactionFormData,
 } from "../../schemas/transactionSchema";
 import { useCreateTransaction } from "../../hooks/useTransactions";
-import { useAllPeople } from "../../../people/hooks/usePeople";
-import { useState } from "react";
+import { peopleQueryKey, usePeople } from "../../../people/hooks/usePeople";
+import { useMemo, useState } from "react";
 import { useEffect } from "react";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../../shared/components/DataState/EmptyState";
@@ -24,6 +35,8 @@ import {
 } from "../../../../shared/api/apiError";
 import { TransactionType } from "../../types/transaction";
 import { transactionTypeOptions } from "../../utils/transactionLabels";
+import type { Person } from "../../../people/types/person";
+import type { PagedResponse } from "../../../../shared/api/apiTypes";
 
 const TransactionsRegisterHeaderData = {
 	sector: "Transações",
@@ -35,13 +48,17 @@ const TransactionsRegisterHeaderData = {
 const TransactionRegisterPage = () => {
 	const navigate = useNavigate();
 	const createTransaction = useCreateTransaction();
+	const queryClient = useQueryClient();
+	const [peoplePage, setPeoplePage] = useState(1);
+	const peoplePageSize = 10;
 	const {
-		data: people = [],
+		data: peopleData,
 		error: peopleError,
 		isError: isPeopleError,
 		isLoading: isPeopleLoading,
+		isFetching: isPeopleFetching,
 		refetch: refetchPeople,
-	} = useAllPeople();
+	} = usePeople({ page: peoplePage, pageSize: peoplePageSize });
 	const peopleErrorFeedback = getApiErrorFeedback(
 		peopleError,
 		"peopleOptionsLoad",
@@ -62,14 +79,36 @@ const TransactionRegisterPage = () => {
 			amount: 0,
 		},
 	});
+	const peopleOptions = useMemo(() => {
+		const peopleById = new Map<string, Person>();
+		const cachedPeoplePages = queryClient.getQueriesData<PagedResponse<Person>>(
+			{
+				queryKey: peopleQueryKey,
+			},
+		);
+
+		cachedPeoplePages.forEach(([, page]) => {
+			page?.content?.forEach((person) => {
+				peopleById.set(person.id, person);
+			});
+		});
+		peopleData?.content.forEach((person) => {
+			peopleById.set(person.id, person);
+		});
+
+		return Array.from(peopleById.values());
+	}, [peopleData, queryClient]);
 	const selectedPersonId = useWatch({ control, name: "personId" });
 	const selectedType = useWatch({ control, name: "type" });
-	const selectedPerson = people.find(
+	const selectedPerson = peopleOptions.find(
 		(person) => person.id === selectedPersonId,
 	);
 	const isSelectedPersonUnderAge = Boolean(
 		selectedPerson && selectedPerson.age < 18,
 	);
+	const isPeopleInitialLoading = isPeopleLoading && peopleOptions.length === 0;
+	const isPeopleBlockingError = isPeopleError && peopleOptions.length === 0;
+	const hasMorePeople = peoplePage < (peopleData?.totalPages ?? 0);
 
 	useEffect(() => {
 		// A API também deve validar, mas o formulário já protege a UX contra receitas para menores.
@@ -85,7 +124,9 @@ const TransactionRegisterPage = () => {
 	const onSubmit = async (data: TransactionFormData) => {
 		try {
 			setSubmitError("");
-			const person = people.find((person) => person.id === data.personId);
+			const person = peopleOptions.find(
+				(person) => person.id === data.personId,
+			);
 
 			if (
 				person?.age !== undefined &&
@@ -110,7 +151,7 @@ const TransactionRegisterPage = () => {
 			<PageHeader data={TransactionsRegisterHeaderData} />
 
 			<div className="transaction-register-page__form-container">
-				{isPeopleError && (
+				{isPeopleBlockingError && (
 					<ErrorState
 						title={peopleErrorFeedback.title}
 						description={peopleErrorFeedback.description}
@@ -119,9 +160,9 @@ const TransactionRegisterPage = () => {
 					/>
 				)}
 
-				{!isPeopleError && (
+				{!isPeopleBlockingError && (
 					<>
-						{!isPeopleLoading && people.length === 0 && (
+						{!isPeopleInitialLoading && peopleOptions.length === 0 && (
 							<EmptyState
 								title="Nenhuma pessoa cadastrada ainda."
 								description="Cadastre uma pessoa antes de registrar transações."
@@ -133,9 +174,14 @@ const TransactionRegisterPage = () => {
 							onSubmit={handleSubmit(onSubmit)}
 						>
 							{submitError && <Alert severity="error">{submitError}</Alert>}
+							{isPeopleError && peopleOptions.length > 0 && (
+								<Alert severity="warning">
+									Nao foi possivel carregar mais pessoas agora.
+								</Alert>
+							)}
 
 							<div className="transaction-form__grid">
-								{isPeopleLoading ? (
+								{isPeopleInitialLoading ? (
 									<Skeleton
 										animation="wave"
 										variant="rounded"
@@ -143,32 +189,33 @@ const TransactionRegisterPage = () => {
 										aria-label="Carregando pessoas"
 									/>
 								) : (
-									<FormControl fullWidth error={Boolean(errors.personId)}>
-										<InputLabel id="person-label">Pessoa</InputLabel>
+									<Controller
+										name="personId"
+										control={control}
+										render={({ field, fieldState }) => (
+											<TextField
+												select
+												fullWidth
+												label="Pessoa"
+												value={field.value ?? ""}
+												onChange={(event) => field.onChange(event.target.value)}
+												onBlur={field.onBlur}
+												inputRef={field.ref}
+												error={Boolean(fieldState.error)}
+												helperText={fieldState.error?.message}
+											>
+												<MenuItem value="">
+													<em>Selecione uma pessoa</em>
+												</MenuItem>
 
-										<Controller
-											name="personId"
-											control={control}
-											render={({ field }) => (
-												<Select
-													{...field}
-													labelId="person-label"
-													label="Pessoa"
-												>
-													<MenuItem value="">
-														<em>Selecione uma pessoa</em>
+												{peopleOptions.map((person) => (
+													<MenuItem key={person.id} value={person.id}>
+														{person.name}
 													</MenuItem>
-
-													{people.map((person) => (
-														<MenuItem key={person.id} value={person.id}>
-															{person.name}
-														</MenuItem>
-													))}
-												</Select>
-											)}
-										/>
-										<FormHelperText>{errors.personId?.message}</FormHelperText>
-									</FormControl>
+												))}
+											</TextField>
+										)}
+									/>
 								)}
 
 								<FormControl fullWidth error={Boolean(errors.type)}>
@@ -220,6 +267,21 @@ const TransactionRegisterPage = () => {
 								/>
 							</div>
 
+							{hasMorePeople && (
+								<Button
+									type="button"
+									variant="text"
+									onClick={() =>
+										setPeoplePage((currentPage) => currentPage + 1)
+									}
+									disabled={isPeopleFetching}
+								>
+									{isPeopleFetching
+										? "Carregando pessoas..."
+										: "Carregar mais pessoas"}
+								</Button>
+							)}
+
 							<div className="transaction-form__actions">
 								<Button
 									component={Link}
@@ -249,9 +311,9 @@ const TransactionRegisterPage = () => {
 									disabled={
 										isSubmitting ||
 										createTransaction.isPending ||
-										isPeopleError ||
-										isPeopleLoading ||
-										people.length === 0
+										isPeopleBlockingError ||
+										isPeopleInitialLoading ||
+										peopleOptions.length === 0
 									}
 									sx={{
 										backgroundColor: "#2e7d32",

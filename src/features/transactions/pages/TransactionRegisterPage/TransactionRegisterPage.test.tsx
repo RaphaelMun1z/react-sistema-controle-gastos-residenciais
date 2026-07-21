@@ -14,7 +14,7 @@ const underAgePersonId = "22222222-2222-4222-8222-222222222222";
 const people = [
 	{
 		id: adultPersonId,
-		name: "Maria Souza",
+		name: "Maria Oliveira",
 		birthDate: "1994-07-18",
 		age: 32,
 	},
@@ -29,7 +29,7 @@ const people = [
 const pagedPeople = {
 	content: people,
 	page: 1,
-	pageSize: 100,
+	pageSize: 10,
 	totalElements: 2,
 	totalPages: 1,
 };
@@ -41,7 +41,7 @@ describe("TransactionRegisterPage", () => {
 				HttpResponse.json({
 					content: [],
 					page: 1,
-					pageSize: 100,
+					pageSize: 10,
 					totalElements: 0,
 					totalPages: 0,
 				}),
@@ -56,65 +56,127 @@ describe("TransactionRegisterPage", () => {
 		expect(screen.getByRole("button", { name: /salvar/i })).toBeDisabled();
 	});
 
-	it(
-		"corrige receita para despesa quando a pessoa selecionada e menor de idade",
-		async () => {
-			const createTransactionHandler = vi.fn(async ({ request }) => {
-				const body = (await request.json()) as {
-					personId: string;
-					type: number;
-					description: string;
-					amount: number;
-				};
+	it("corrige receita para despesa quando a pessoa selecionada e menor de idade", async () => {
+		const createTransactionHandler = vi.fn(async ({ request }) => {
+			const body = (await request.json()) as {
+				personId: string;
+				type: number;
+				description: string;
+				amount: number;
+			};
 
-				expect(body).toEqual({
-					personId: underAgePersonId,
-					type: TransactionType.Expense,
-					description: "Mesada",
-					amount: 50,
-				});
-
-				return HttpResponse.json({
-					data: {
-						id: "33333333-3333-4333-8333-333333333333",
-						...body,
-					},
-					links: {},
-				});
+			expect(body).toEqual({
+				personId: underAgePersonId,
+				type: TransactionType.Expense,
+				description: "Mesada",
+				amount: 50,
 			});
 
-			server.use(
-				http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json(pagedPeople)),
-				http.post(`*${API_ENDPOINTS.transactions}`, createTransactionHandler),
-			);
+			return HttpResponse.json({
+				data: {
+					id: "33333333-3333-4333-8333-333333333333",
+					...body,
+				},
+				links: {},
+			});
+		});
 
-			renderWithProviders(<TransactionRegisterPage />);
+		server.use(
+			http.get(`*${API_ENDPOINTS.people}`, () =>
+				HttpResponse.json(pagedPeople),
+			),
+			http.post(`*${API_ENDPOINTS.transactions}`, createTransactionHandler),
+		);
 
-			await userEvent.click(await screen.findByLabelText("Pessoa"));
-			await userEvent.click(screen.getByRole("option", { name: "Maria Souza" }));
+		renderWithProviders(<TransactionRegisterPage />);
 
-			await userEvent.click(screen.getByLabelText("Tipo"));
-			await userEvent.click(screen.getByRole("option", { name: "Receita" }));
+		await userEvent.click(await screen.findByLabelText("Pessoa"));
+		await userEvent.click(
+			screen.getByRole("option", { name: "Maria Oliveira" }),
+		);
 
-			await userEvent.click(screen.getByLabelText("Pessoa"));
-			await userEvent.click(screen.getByRole("option", { name: "Joao Souza" }));
+		await userEvent.click(screen.getByLabelText("Tipo"));
+		await userEvent.click(screen.getByRole("option", { name: "Receita" }));
 
-			await userEvent.click(screen.getByLabelText("Tipo"));
-			const listbox = screen.getByRole("listbox");
+		await userEvent.click(screen.getByLabelText("Pessoa"));
+		await userEvent.click(screen.getByRole("option", { name: "Joao Souza" }));
+
+		await userEvent.click(screen.getByLabelText("Tipo"));
+		const listbox = screen.getByRole("listbox");
+		expect(
+			within(listbox).getByRole("option", { name: "Receita" }),
+		).toHaveAttribute("aria-disabled", "true");
+		await userEvent.keyboard("{Escape}");
+
+		await userEvent.type(screen.getByLabelText("Descrição"), "Mesada");
+		await userEvent.clear(screen.getByLabelText("Valor"));
+		await userEvent.type(screen.getByLabelText("Valor"), "50");
+		await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+		await waitFor(() => {
+			expect(createTransactionHandler).toHaveBeenCalledTimes(1);
+		});
+	}, 10000);
+
+	it("seleciona pessoa pelo UUID, limpa validacao e envia payload correto", async () => {
+		const createTransactionHandler = vi.fn(async ({ request }) => {
+			const body = (await request.json()) as {
+				personId: string;
+				type: number;
+				description: string;
+				amount: number;
+			};
+
+			expect(body).toEqual({
+				personId: adultPersonId,
+				type: TransactionType.Expense,
+				description: "Aluguel",
+				amount: 1200,
+			});
+
+			return HttpResponse.json({
+				data: {
+					id: "33333333-3333-4333-8333-333333333333",
+					...body,
+				},
+				links: {},
+			});
+		});
+
+		server.use(
+			http.get(`*${API_ENDPOINTS.people}`, () =>
+				HttpResponse.json(pagedPeople),
+			),
+			http.post(`*${API_ENDPOINTS.transactions}`, createTransactionHandler),
+		);
+
+		renderWithProviders(<TransactionRegisterPage />);
+
+		await screen.findByLabelText("Pessoa");
+		await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+		expect(
+			await screen.findByText("Selecione uma pessoa."),
+		).toBeInTheDocument();
+
+		await userEvent.click(screen.getByLabelText("Pessoa"));
+		await userEvent.click(
+			screen.getByRole("option", { name: "Maria Oliveira" }),
+		);
+
+		expect(screen.getByText("Maria Oliveira")).toBeInTheDocument();
+		await waitFor(() => {
 			expect(
-				within(listbox).getByRole("option", { name: "Receita" }),
-			).toHaveAttribute("aria-disabled", "true");
-			await userEvent.keyboard("{Escape}");
+				screen.queryByText("Selecione uma pessoa."),
+			).not.toBeInTheDocument();
+		});
 
-			await userEvent.type(screen.getByLabelText("Descrição"), "Mesada");
-			await userEvent.clear(screen.getByLabelText("Valor"));
-			await userEvent.type(screen.getByLabelText("Valor"), "50");
-			await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+		await userEvent.type(screen.getByLabelText(/Descri/i), "Aluguel");
+		await userEvent.clear(screen.getByLabelText("Valor"));
+		await userEvent.type(screen.getByLabelText("Valor"), "1200");
+		await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
 
-			await waitFor(() => {
-				expect(createTransactionHandler).toHaveBeenCalledTimes(1);
-			});
-		},
-		10000,
-	);
+		await waitFor(() => {
+			expect(createTransactionHandler).toHaveBeenCalledTimes(1);
+		});
+	});
 });

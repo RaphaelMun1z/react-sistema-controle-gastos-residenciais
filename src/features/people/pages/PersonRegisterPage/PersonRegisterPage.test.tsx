@@ -35,7 +35,10 @@ describe("PersonRegisterPage", () => {
 		renderWithProviders(<PersonRegisterPage />);
 
 		await userEvent.type(screen.getByLabelText("Nome"), "Maria Souza");
-		await userEvent.type(screen.getByLabelText("Data de nascimento"), "1994-07-18");
+		await userEvent.type(
+			screen.getByLabelText("Data de nascimento"),
+			"1994-07-18",
+		);
 		await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
 
 		await waitFor(() => {
@@ -54,11 +57,54 @@ describe("PersonRegisterPage", () => {
 		renderWithProviders(<PersonRegisterPage />);
 
 		await userEvent.type(screen.getByLabelText("Nome"), "Maria Souza");
-		await userEvent.type(screen.getByLabelText("Data de nascimento"), "1994-07-18");
+		await userEvent.type(
+			screen.getByLabelText("Data de nascimento"),
+			"1994-07-18",
+		);
 		await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
 
 		expect(
-			await screen.findByText("Já existe uma pessoa cadastrada com essas informações."),
+			await screen.findByText(
+				"Já existe uma pessoa cadastrada com essas informações.",
+			),
 		).toBeInTheDocument();
+	});
+	it("exibe detalhe limpo do ProblemDetails quando data de nascimento e futura", async () => {
+		server.use(
+			http.post(`*${API_ENDPOINTS.people}`, () =>
+				HttpResponse.json(
+					{
+						title: "Requisicao invalida",
+						status: 400,
+						detail:
+							"A data de nascimento nao pode ser uma data futura (Parameter 'birthDate')",
+						instance: "/api/v1/people",
+					},
+					{
+						status: 400,
+						headers: { "Content-Type": "application/problem+json" },
+					},
+				),
+			),
+		);
+
+		renderWithProviders(<PersonRegisterPage />);
+
+		await userEvent.type(screen.getByLabelText("Nome"), "Maria Souza");
+		await userEvent.type(
+			screen.getByLabelText("Data de nascimento"),
+			"2099-07-18",
+		);
+		await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+		expect(
+			await screen.findByText(
+				"A data de nascimento nao pode ser uma data futura.",
+			),
+		).toBeInTheDocument();
+		expect(
+			screen.queryByText("Alguns dados precisam de atenÃ§Ã£o."),
+		).not.toBeInTheDocument();
+		expect(screen.queryByText(/Parameter 'birthDate'/)).not.toBeInTheDocument();
 	});
 });

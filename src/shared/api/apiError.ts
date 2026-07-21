@@ -40,7 +40,8 @@ const httpErrorMessages: Record<number, string> = {
 
 const defaultDescriptions = {
 	retry: "Tente novamente em alguns instantes.",
-	later: "Não conseguimos concluir essa ação agora. Tente novamente mais tarde.",
+	later:
+		"Não conseguimos concluir essa ação agora. Tente novamente mais tarde.",
 };
 
 const contextTitles: Record<UiErrorContext, string> = {
@@ -56,6 +57,42 @@ const contextTitles: Record<UiErrorContext, string> = {
 	signIn: "Não foi possível entrar agora.",
 	signUp: "Não foi possível criar sua conta.",
 };
+
+const unsafeMessagePatterns = [
+	/\b(exception|stack trace|system\.|microsoft\.|sql|select\s+|insert\s+|update\s+|delete\s+)\b/i,
+	/\bat\s+\w+\./i,
+	/\b[A-Z][A-Za-z0-9_]+Exception\b/,
+	/\/api\/v\d+\//i,
+];
+
+const cleanProblemDetailsMessage = (message?: string) => {
+	if (!message) {
+		return undefined;
+	}
+
+	const cleaned = message
+		.replace(/\s*\(Parameter '[^']+'\)\s*\.?$/i, "")
+		.trim();
+
+	if (
+		!cleaned ||
+		unsafeMessagePatterns.some((pattern) => pattern.test(cleaned))
+	) {
+		return undefined;
+	}
+
+	return cleaned.endsWith(".") ? cleaned : `${cleaned}.`;
+};
+
+const getProblemDetailsDetail = (problemDetails?: ProblemDetails) =>
+	cleanProblemDetailsMessage(problemDetails?.detail);
+
+const getProblemDetailsTitle = (problemDetails?: ProblemDetails) =>
+	cleanProblemDetailsMessage(problemDetails?.title);
+
+const getProblemDetailsMessage = (problemDetails?: ProblemDetails) =>
+	getProblemDetailsDetail(problemDetails) ??
+	getProblemDetailsTitle(problemDetails);
 
 export const createApiError = (error: unknown): ApiError => {
 	if (isApiError(error)) {
@@ -77,7 +114,7 @@ export const createApiError = (error: unknown): ApiError => {
 	}
 
 	return {
-	type: "unknown",
+		type: "unknown",
 		message: "Algo deu errado. Não conseguimos concluir essa ação agora.",
 	};
 };
@@ -90,7 +127,9 @@ export const createHttpError = (
 	status,
 	problemDetails,
 	message:
-		httpErrorMessages[status] ?? "Algo deu errado. Não conseguimos concluir essa ação agora.",
+		getProblemDetailsMessage(problemDetails) ??
+		httpErrorMessages[status] ??
+		"Algo deu errado. Não conseguimos concluir essa ação agora.",
 });
 
 export const getApiErrorMessage = (error: unknown) =>
@@ -135,23 +174,32 @@ export const getApiErrorFeedback = (
 		};
 	}
 
+	const problemDetailsDetail = getProblemDetailsDetail(apiError.problemDetails);
+	const problemDetailsTitle = getProblemDetailsTitle(apiError.problemDetails);
+	const problemDetailsMessage = problemDetailsDetail ?? problemDetailsTitle;
+
 	if (apiError.status === 403) {
 		return {
-			title: "Você não tem permissão para realizar esta ação.",
-			description: "Se precisar continuar, solicite acesso a uma pessoa responsável.",
+			title:
+				problemDetailsMessage ??
+				"Você não tem permissão para realizar esta ação.",
+			description:
+				"Se precisar continuar, solicite acesso a uma pessoa responsável.",
 		};
 	}
 
 	if (apiError.status === 404) {
 		return {
-			title: "Não encontramos as informações que você procurava.",
+			title:
+				problemDetailsMessage ??
+				"Não encontramos as informações que você procurava.",
 			description: "Confira os dados e tente novamente.",
 		};
 	}
 
 	if (apiError.status === 409) {
 		return {
-			title: getConflictMessage(context),
+			title: problemDetailsDetail ?? getConflictMessage(context),
 			description: "Revise as informações e tente novamente.",
 		};
 	}
@@ -159,9 +207,10 @@ export const getApiErrorFeedback = (
 	if (apiError.status === 400 || apiError.status === 422) {
 		return {
 			title:
-				context === "transactionsCreate"
+				problemDetailsMessage ??
+				(context === "transactionsCreate"
 					? "Não foi possível registrar essa transação."
-					: "Alguns dados precisam de atenção.",
+					: "Alguns dados precisam de atenção."),
 			description: "Revise as informações preenchidas e tente novamente.",
 		};
 	}

@@ -2,11 +2,13 @@ import "./TransactionsConsultPage.scss";
 
 // Componentes
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
-import Table, { type TableColumn } from "../../../../shared/components/Table/Table";
+import Table, {
+	type TableColumn,
+} from "../../../../shared/components/Table/Table";
 
 // Componentes do Material UI
 import { Button, Pagination } from "@mui/material";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Ícones
@@ -19,13 +21,9 @@ import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 
 // React Router
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
-import {
-	transactionsQueryKey,
-	useTransactions,
-} from "../../hooks/useTransactions";
-import { transactionsService } from "../../services/transactionsService";
+import { useTransactions } from "../../hooks/useTransactions";
 import { TransactionType, type Transaction } from "../../types/transaction";
 import { transactionTypeLabels } from "../../utils/transactionLabels";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
@@ -33,8 +31,10 @@ import EmptyState from "../../../../shared/components/DataState/EmptyState";
 import TableSkeleton from "../../../../shared/components/skeletons/TableSkeleton";
 import { getApiErrorFeedback } from "../../../../shared/api/apiError";
 import walletImage from "../../../../assets/images/wallet.png";
-import { useAllPeople } from "../../../people/hooks/usePeople";
+import { peopleQueryKey } from "../../../people/hooks/usePeople";
+import type { Person } from "../../../people/types/person";
 import { formatCurrency } from "../../../summary/utils/currency";
+import type { PagedResponse } from "../../../../shared/api/apiTypes";
 
 const columnHeader = (icon: ReactNode, label: string) => (
 	<span className="table-column-header">
@@ -111,46 +111,50 @@ const columns: TableColumn<Transaction>[] = [
 ];
 
 const TransactionsConsultPage = () => {
-	const [page, setPage] = useState(1);
+	const [searchParams, setSearchParams] = useSearchParams();
+	const requestedPage = Number(searchParams.get("page") ?? "1");
+	const page =
+		Number.isInteger(requestedPage) && requestedPage >= 1 ? requestedPage : 1;
 	const pageSize = 10;
 	const queryClient = useQueryClient();
-	const {
-		data,
-		error,
-		isError,
-		isLoading,
-		isFetching,
-		refetch,
-	} = useTransactions({ page, pageSize });
-	const { data: people = [] } = useAllPeople();
-	const peopleById = new Map(people.map((person) => [person.id, person.name]));
+	const { data, error, isError, isLoading, isFetching, refetch } =
+		useTransactions({ page, pageSize });
+	const peopleById = useMemo(() => {
+		const cachedPeoplePages = queryClient.getQueriesData<PagedResponse<Person>>(
+			{
+				queryKey: peopleQueryKey,
+			},
+		);
+
+		return new Map(
+			cachedPeoplePages.flatMap(([, page]) =>
+				(page?.content ?? []).map(
+					(person) => [person.id, person.name] as const,
+				),
+			),
+		);
+	}, [queryClient]);
 	const transactions = data?.content ?? [];
 	const errorFeedback = getApiErrorFeedback(error, "transactionsList");
-	const columnsWithPersonName: TableColumn<Transaction>[] = columns.map((column) =>
-		column.key === "person"
-			? {
-					...column,
-					render: (transaction) =>
-						cellWithIcon(
-							<PersonOutlinedIcon fontSize="small" />,
-							peopleById.get(transaction.personId) ?? transaction.personId,
-						),
-				}
-			: column,
+	const columnsWithPersonName: TableColumn<Transaction>[] = columns.map(
+		(column) =>
+			column.key === "person"
+				? {
+						...column,
+						render: (transaction) =>
+							cellWithIcon(
+								<PersonOutlinedIcon fontSize="small" />,
+								peopleById.get(transaction.personId) ?? transaction.personId,
+							),
+					}
+				: column,
 	);
 
 	useEffect(() => {
-		const totalPages = data?.totalPages ?? 0;
-		const nextPage = page + 1;
-
-		if (nextPage <= totalPages) {
-			void queryClient.prefetchQuery({
-				queryKey: [...transactionsQueryKey, nextPage, pageSize] as const,
-				queryFn: () =>
-					transactionsService.getTransactions({ page: nextPage, pageSize }),
-			});
+		if (searchParams.get("page") && page !== requestedPage) {
+			setSearchParams({ page: "1" }, { replace: true });
 		}
-	}, [data?.totalPages, page, pageSize, queryClient]);
+	}, [page, requestedPage, searchParams, setSearchParams]);
 
 	return (
 		<section className="transactions-consult-page">
@@ -208,7 +212,9 @@ const TransactionsConsultPage = () => {
 								className="transactions-consult-page__pagination"
 								page={page}
 								count={data?.totalPages ?? 1}
-								onChange={(_event, nextPage) => setPage(nextPage)}
+								onChange={(_event, nextPage) =>
+									setSearchParams({ page: String(nextPage) })
+								}
 								color="primary"
 							/>
 						)}
