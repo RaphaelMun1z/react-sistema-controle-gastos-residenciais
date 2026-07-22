@@ -198,10 +198,32 @@ VITE_API_URL=http://localhost:7201/api/v1
 VITE_BYPASS_AUTH=false
 ```
 
-Execute o frontend:
+### Execução local
+
+Execute o frontend na porta `5173`:
 
 ```bash
-npm run dev
+npm run dev -- --host 0.0.0.0 --port 5173
+```
+
+A aplicação ficará disponível em:
+
+```text
+http://localhost:5173
+```
+
+### Execução com Docker
+
+Construa a imagem:
+
+```bash
+docker build --build-arg VITE_API_URL=http://localhost:7201/api/v1 --build-arg VITE_BYPASS_AUTH=false -t react-sistema-controle-gastos-residenciais .
+```
+
+Inicie o container na porta `5173`:
+
+```bash
+docker run --rm --name controle-gastos-frontend -p 5173:80 react-sistema-controle-gastos-residenciais
 ```
 
 Comandos úteis:
