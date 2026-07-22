@@ -8,8 +8,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import CakeOutlinedIcon from "@mui/icons-material/CakeOutlined";
-import GoogleIcon from "@mui/icons-material/Google";
-import GitHubIcon from "@mui/icons-material/GitHub";
 
 // React Router
 import { Link, useNavigate } from "react-router";
@@ -203,24 +201,6 @@ const SignUp = () => {
 					Criar conta
 				</Button>
 			</form>
-
-			<div className="divider">
-				<span>ou continue com</span>
-			</div>
-
-			<div className="social-buttons">
-				<Button variant="outlined" aria-label="Cadastrar com Google">
-					<GoogleIcon className="input-icon" />
-
-					<span className="social-media-login-name">Google</span>
-				</Button>
-
-				<Button variant="outlined" aria-label="Cadastrar com GitHub">
-					<GitHubIcon className="input-icon" />
-
-					<span className="social-media-login-name">GitHub</span>
-				</Button>
-			</div>
 
 			<p className="auth-redirect">
 				Já possui uma conta? <Link to={ROUTES.signIn}>Entrar</Link>
