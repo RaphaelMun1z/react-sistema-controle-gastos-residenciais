@@ -13,6 +13,7 @@ import { AuthContext, type AuthContextValue } from "../contexts/AuthContext";
 import { authTokenStorage } from "../../../shared/api/authTokenStorage";
 import { setUnauthorizedHandler } from "../../../shared/api/httpClient";
 import { getApiErrorMessage } from "../../../shared/api/apiError";
+import { ROUTES } from "../../../app/routes/paths";
 
 interface AuthProviderProps {
 	children: ReactNode;
@@ -27,6 +28,9 @@ interface AuthState {
 }
 
 const authMeQueryKey = ["auth", "me"] as const;
+const sessionMessageStorageKey = "residential-expenses.session-message";
+const expiredSessionMessage =
+	"Sua sessão expirou. Entre novamente para continuar.";
 
 const bypassUser: AuthUser = {
 	accountId: "bypass-account",
@@ -35,36 +39,54 @@ const bypassUser: AuthUser = {
 	email: "local@reservae.test",
 };
 
-const getInitialAuthState = (): AuthState => {
-	if (env.bypassAuth) {
-		return {
-			sessionExpiresAt: null,
-			sessionMessage: "",
-			user: bypassUser,
-			userError: "",
-			isUserLoading: false,
-		};
-	}
-
+const getStoredActiveTokenState = () => {
 	const storedToken = authTokenStorage.get();
 
 	if (!storedToken) {
 		return {
-			sessionExpiresAt: null,
-			sessionMessage: "",
-			user: null,
-			userError: "",
-			isUserLoading: false,
+			token: null,
+			wasExpired: false,
 		};
 	}
 
 	if (authTokenStorage.isExpired(storedToken)) {
 		authTokenStorage.clear();
+		return {
+			token: null,
+			wasExpired: true,
+		};
+	}
 
+	return {
+		token: storedToken,
+		wasExpired: false,
+	};
+};
+
+const consumeStoredSessionMessage = () => {
+	const message = sessionStorage.getItem(sessionMessageStorageKey) ?? "";
+	sessionStorage.removeItem(sessionMessageStorageKey);
+
+	return message;
+};
+
+const redirectToSignIn = () => {
+	if (window.location.pathname !== ROUTES.signIn) {
+		window.location.assign(ROUTES.signIn);
+	}
+};
+
+const getInitialAuthState = (): AuthState => {
+	const { token: storedToken, wasExpired } = getStoredActiveTokenState();
+	const storedSessionMessage = consumeStoredSessionMessage();
+
+	if (!storedToken) {
 		return {
 			sessionExpiresAt: null,
-			sessionMessage: "Sua sessão expirou. Entre novamente para continuar.",
-			user: null,
+			sessionMessage:
+				storedSessionMessage ||
+				(wasExpired && !env.bypassAuth ? expiredSessionMessage : ""),
+			user: env.bypassAuth ? bypassUser : null,
 			userError: "",
 			isUserLoading: false,
 		};
@@ -88,7 +110,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 	}, [queryClient]);
 
 	const loadUser = useCallback(async () => {
-		if (env.bypassAuth || !authTokenStorage.get()) {
+		if (!getStoredActiveTokenState().token) {
 			return;
 		}
 
@@ -138,15 +160,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 		[clearAuthCache],
 	);
 
+	const expireSession = useCallback(() => {
+		sessionStorage.setItem(sessionMessageStorageKey, expiredSessionMessage);
+		signOut(expiredSessionMessage);
+		redirectToSignIn();
+	}, [signOut]);
+
 	useEffect(() => {
 		setUnauthorizedHandler(() => {
-			signOut("Sua sessão expirou. Entre novamente para continuar.");
+			expireSession();
 		});
 
 		return () => {
 			setUnauthorizedHandler(null);
 		};
-	}, [signOut]);
+	}, [expireSession]);
 
 	useEffect(() => {
 		if (authState.sessionExpiresAt && !authState.user && !authState.userError) {
@@ -188,7 +216,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 			user: authState.user,
 			userError: authState.userError,
 			isAuthenticated:
-				Boolean(authState.sessionExpiresAt && authState.user) || env.bypassAuth,
+				Boolean(authState.sessionExpiresAt && authState.user) ||
+				(env.bypassAuth && !authState.sessionExpiresAt),
 			signIn,
 			signUp,
 			signOut,

@@ -11,6 +11,11 @@ import PageTitle from "../shared/components/PageTitle/PageTitle";
 import PageSkeleton from "../shared/components/skeletons/PageSkeleton";
 import PrivateRoute from "../features/authentication/components/PrivateRoute";
 import PublicRoute from "../features/authentication/components/PublicRoute";
+import PeopleConsultPage from "../features/people/pages/PeopleConsultPage/PeopleConsultPage";
+import PersonRegisterPage from "../features/people/pages/PersonRegisterPage/PersonRegisterPage";
+import TransactionRegisterPage from "../features/transactions/pages/TransactionRegisterPage/TransactionRegisterPage";
+import TransactionsConsultPage from "../features/transactions/pages/TransactionsConsultPage/TransactionsConsultPage";
+import SummaryPage from "../features/summary/pages/SummaryPage";
 
 // Páginas/componentes - Autenticação
 const SignIn = lazy(
@@ -18,28 +23,6 @@ const SignIn = lazy(
 );
 const SignUp = lazy(
 	() => import("../features/authentication/pages/SignUp/SignUp"),
-);
-const PeopleConsultPage = lazy(
-	() => import("../features/people/pages/PeopleConsultPage/PeopleConsultPage"),
-);
-const PersonRegisterPage = lazy(
-	() =>
-		import("../features/people/pages/PersonRegisterPage/PersonRegisterPage"),
-);
-const TransactionRegisterPage = lazy(
-	() =>
-		import(
-			"../features/transactions/pages/TransactionRegisterPage/TransactionRegisterPage"
-		),
-);
-const TransactionsConsultPage = lazy(
-	() =>
-		import(
-			"../features/transactions/pages/TransactionsConsultPage/TransactionsConsultPage"
-		),
-);
-const SummaryPage = lazy(
-	() => import("../features/summary/pages/SummaryPage"),
 );
 const NotFoundPage = lazy(
 	() => import("../features/not-found/pages/NotFoundPage/NotFoundPage"),

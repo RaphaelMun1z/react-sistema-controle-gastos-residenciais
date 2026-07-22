@@ -9,6 +9,8 @@
 
 	&__create {
 		display: flex;
+		align-items: center;
+		gap: 16px;
 		margin-top: 40px;
 	}
 
@@ -54,6 +56,8 @@
 
 @include down($breakpoint-sm) {
 	.people-consult-page__create {
+		align-items: stretch;
+		flex-direction: column;
 		margin-top: 28px;
 
 		a {
