@@ -7,8 +7,15 @@ import Table, {
 } from "../../../../shared/components/Table/Table";
 
 // Componentes do Material UI
-import { Button, Pagination } from "@mui/material";
-import { useEffect, useMemo, type ReactNode } from "react";
+import {
+	Autocomplete,
+	Avatar,
+	Button,
+	InputAdornment,
+	Pagination,
+	TextField,
+} from "@mui/material";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Ícones
@@ -20,6 +27,7 @@ import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import ClearIcon from "@mui/icons-material/Clear";
 
 // React Router
 import { Link, useSearchParams } from "react-router";
@@ -32,7 +40,7 @@ import EmptyState from "../../../../shared/components/DataState/EmptyState";
 import TableSkeleton from "../../../../shared/components/skeletons/TableSkeleton";
 import { getApiErrorFeedback } from "../../../../shared/api/apiError";
 import walletImage from "../../../../assets/images/wallet.png";
-import { peopleQueryKey } from "../../../people/hooks/usePeople";
+import { peopleQueryKey, usePeopleSearch } from "../../../people/hooks/usePeople";
 import type { Person } from "../../../people/types/person";
 import { formatCurrency } from "../../../summary/utils/currency";
 import type { PagedResponse } from "../../../../shared/api/apiTypes";
@@ -51,6 +59,9 @@ const cellWithIcon = (icon: ReactNode, value: ReactNode) => (
 		<span>{value}</span>
 	</span>
 );
+
+const getPersonInitial = (personName: string) =>
+	personName.trim().charAt(0).toUpperCase();
 
 const transactionTypeBadge = (transaction: Transaction) => {
 	const isRevenue = transaction.type === TransactionType.Revenue;
@@ -124,12 +135,24 @@ const columns: TableColumn<Transaction>[] = [
 const TransactionsConsultPage = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const requestedPage = Number(searchParams.get("page") ?? "1");
+	const selectedPersonId = searchParams.get("personId") ?? "";
 	const page =
 		Number.isInteger(requestedPage) && requestedPage >= 1 ? requestedPage : 1;
 	const pageSize = 10;
+	const [personSearch, setPersonSearch] = useState("");
+	const [debouncedPersonSearch, setDebouncedPersonSearch] = useState("");
 	const queryClient = useQueryClient();
 	const { data, error, isError, isLoading, isFetching, refetch } =
-		useTransactions({ page, pageSize });
+		useTransactions({ page, pageSize, personId: selectedPersonId });
+	const {
+		data: peopleData,
+		isFetching: isPeopleFetching,
+	} = usePeopleSearch({
+		page: 1,
+		pageSize: 10,
+		search: debouncedPersonSearch,
+	});
+	const peopleOptions = peopleData?.content ?? [];
 	const peopleById = useMemo(() => {
 		const cachedPeoplePages = queryClient.getQueriesData<PagedResponse<Person>>(
 			{
@@ -138,13 +161,21 @@ const TransactionsConsultPage = () => {
 		);
 
 		return new Map(
-			cachedPeoplePages.flatMap(([, page]) =>
-				(page?.content ?? []).map(
-					(person) => [person.id, person.name] as const,
-				),
-			),
+			[
+				...cachedPeoplePages.flatMap(([, page]) => page?.content ?? []),
+				...peopleOptions,
+			].map((person) => [person.id, person.name] as const),
 		);
-	}, [queryClient]);
+	}, [queryClient, peopleOptions]);
+	const selectedPerson =
+		peopleById.get(selectedPersonId) && selectedPersonId
+			? {
+					id: selectedPersonId,
+					name: peopleById.get(selectedPersonId) ?? selectedPersonId,
+					birthDate: "",
+					age: 0,
+				}
+			: (peopleOptions.find((person) => person.id === selectedPersonId) ?? null);
 	const transactions = data?.content ?? [];
 	const errorFeedback = getApiErrorFeedback(error, "transactionsList");
 	const columnsWithPersonName: TableColumn<Transaction>[] = columns.map(
@@ -163,15 +194,107 @@ const TransactionsConsultPage = () => {
 
 	useEffect(() => {
 		if (searchParams.get("page") && page !== requestedPage) {
-			setSearchParams({ page: "1" }, { replace: true });
+			setSearchParams(
+				selectedPersonId
+					? { page: "1", personId: selectedPersonId }
+					: { page: "1" },
+				{ replace: true },
+			);
 		}
-	}, [page, requestedPage, searchParams, setSearchParams]);
+	}, [
+		page,
+		requestedPage,
+		searchParams,
+		selectedPersonId,
+		setSearchParams,
+	]);
+
+	useEffect(() => {
+		const timeout = globalThis.setTimeout(() => {
+			setDebouncedPersonSearch(personSearch.trim());
+		}, 350);
+
+		return () => globalThis.clearTimeout(timeout);
+	}, [personSearch]);
+
+	const updateFilters = (personId: string, nextPage = 1) => {
+		setSearchParams(
+			personId ? { page: String(nextPage), personId } : { page: String(nextPage) },
+		);
+	};
 
 	return (
 		<section className="transactions-consult-page">
 			<PageHeader data={TransactionsConsultHeaderData} />
 
-			<div className="transactions-consult-page__create">
+			<div className="transactions-consult-page__toolbar">
+				<Autocomplete<Person>
+					className="transactions-consult-page__person-filter"
+					options={peopleOptions}
+					value={selectedPerson}
+					inputValue={personSearch}
+					loading={isPeopleFetching}
+					loadingText="Buscando pessoas..."
+					noOptionsText="Nenhuma pessoa encontrada"
+					getOptionLabel={(person) => person.name}
+					isOptionEqualToValue={(option, value) => option.id === value.id}
+					onInputChange={(_event, value) => setPersonSearch(value)}
+					onChange={(_event, person) => updateFilters(person?.id ?? "")}
+					renderOption={(props, person) => {
+						const { key, className, ...optionProps } = props;
+
+						return (
+							<li
+								key={key}
+								{...optionProps}
+								aria-label={person.name}
+								className={`${className ?? ""} transactions-person-option`}
+							>
+								<Avatar className="transactions-person-option__avatar">
+									{getPersonInitial(person.name)}
+								</Avatar>
+								<span>{person.name}</span>
+							</li>
+						);
+					}}
+					renderInput={(params) => (
+						<TextField
+							{...params}
+							label="Filtrar por pessoa"
+							placeholder="Todas as pessoas"
+							size="small"
+							slotProps={{
+								...params.slotProps,
+								input: {
+									...params.slotProps.input,
+									startAdornment: (
+										<>
+											<InputAdornment position="start">
+												<PersonOutlinedIcon fontSize="small" />
+											</InputAdornment>
+											{params.slotProps.input.startAdornment}
+										</>
+									),
+								},
+							}}
+						/>
+					)}
+				/>
+
+				{selectedPersonId && (
+					<Button
+						type="button"
+						variant="text"
+						startIcon={<ClearIcon />}
+						onClick={() => {
+							setPersonSearch("");
+							updateFilters("");
+						}}
+					>
+						Limpar filtro
+					</Button>
+				)}
+
 				<Button
 					component={Link}
 					to={ROUTES.transactionRegister}
@@ -224,7 +347,7 @@ const TransactionsConsultPage = () => {
 								page={page}
 								count={data?.totalPages ?? 1}
 								onChange={(_event, nextPage) =>
-									setSearchParams({ page: String(nextPage) })
+									updateFilters(selectedPersonId, nextPage)
 								}
 								color="primary"
 							/>

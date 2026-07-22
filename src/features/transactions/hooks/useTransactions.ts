@@ -8,10 +8,22 @@ export const transactionQueryKey = (id: string) =>
 	["transactions", id] as const;
 export const transactionsByPersonQueryKey = ["transactions-person"] as const;
 
-export const useTransactions = (params: PaginationParams) =>
+export interface TransactionsParams extends PaginationParams {
+	personId?: string;
+}
+
+export const useTransactions = (params: TransactionsParams) =>
 	useQuery({
-		queryKey: [...transactionsQueryKey, params.page, params.pageSize] as const,
-		queryFn: () => transactionsService.getTransactions(params),
+		queryKey: [
+			...transactionsQueryKey,
+			params.page,
+			params.pageSize,
+			params.personId ?? "",
+		] as const,
+		queryFn: () =>
+			params.personId
+				? transactionsService.getTransactionsByPerson(params.personId, params)
+				: transactionsService.getTransactions(params),
 		placeholderData: keepPreviousData,
 		staleTime: 60 * 1000,
 	});

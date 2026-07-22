@@ -28,6 +28,21 @@ const pagedTransactions = {
 	totalPages: 1,
 };
 
+const pagedPeople = {
+	content: [
+		{
+			id: personId,
+			name: "Maria Oliveira",
+			birthDate: "1994-07-18",
+			age: 32,
+		},
+	],
+	page: 1,
+	pageSize: 10,
+	totalElements: 1,
+	totalPages: 1,
+};
+
 describe("TransactionsConsultPage", () => {
 	it("exibe loading e renderiza transacoes retornadas pela API", async () => {
 		server.use(
@@ -133,5 +148,51 @@ describe("TransactionsConsultPage", () => {
 		expect(await screen.findByText("Transacao pagina 1")).toBeInTheDocument();
 		expect(requestedPages).toEqual(["1", "2"]);
 		expect(requestedPages).not.toContain("3");
+	});
+
+	it("filtra transacoes por pessoa selecionada", async () => {
+		const transactionsByPersonHandler = vi.fn(() =>
+			HttpResponse.json({
+				content: [
+					{
+						...transaction,
+						description: "Mercado da Maria",
+					},
+				],
+				page: 1,
+				pageSize: 10,
+				totalElements: 1,
+				totalPages: 1,
+			}),
+		);
+
+		server.use(
+			http.get(`*${API_ENDPOINTS.people}`, () =>
+				HttpResponse.json(pagedPeople),
+			),
+			http.get(`*${API_ENDPOINTS.transactions}`, () =>
+				HttpResponse.json({
+					content: [],
+					page: 1,
+					pageSize: 10,
+					totalElements: 0,
+					totalPages: 0,
+				}),
+			),
+			http.get(
+				`*${API_ENDPOINTS.transactionsByPerson(personId)}`,
+				transactionsByPersonHandler,
+			),
+		);
+
+		renderWithProviders(<TransactionsConsultPage />);
+
+		await userEvent.click(await screen.findByLabelText("Filtrar por pessoa"));
+		await userEvent.click(
+			await screen.findByRole("option", { name: "Maria Oliveira" }),
+		);
+
+		expect(await screen.findByText("Mercado da Maria")).toBeInTheDocument();
+		expect(transactionsByPersonHandler).toHaveBeenCalledTimes(1);
 	});
 });
