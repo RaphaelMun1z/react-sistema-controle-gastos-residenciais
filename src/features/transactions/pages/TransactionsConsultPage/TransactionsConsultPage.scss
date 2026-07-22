@@ -7,9 +7,20 @@
 	min-width: 0;
 	min-height: 100%;
 
-	&__create {
+	&__toolbar {
 		display: flex;
+		align-items: center;
+		gap: 12px;
+		flex-wrap: wrap;
 		margin-top: 40px;
+
+		> a {
+			margin-left: auto;
+		}
+	}
+
+	&__person-filter {
+		width: min(360px, 100%);
 	}
 
 	&__table {
@@ -36,6 +47,21 @@
 		justify-content: center;
 		margin-top: 1.5rem;
 	}
+}
+
+.transactions-person-option {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 50px;
+}
+
+.transactions-person-option__avatar {
+	width: 32px;
+	height: 32px;
+	font-size: 0.85rem;
+	font-weight: 700;
+	background-color: #2f6f5e;
 }
 
 .table-column-header,
@@ -70,11 +96,19 @@
 }
 
 @include down($breakpoint-sm) {
-	.transactions-consult-page__create {
+	.transactions-consult-page__toolbar {
+		align-items: stretch;
+		flex-direction: column;
 		margin-top: 28px;
 
-		a {
+		> a,
+		button {
 			width: 100%;
+			margin-left: 0;
 		}
+	}
+
+	.transactions-consult-page__person-filter {
+		width: 100%;
 	}
 }

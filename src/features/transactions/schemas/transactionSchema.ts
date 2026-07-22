@@ -4,10 +4,7 @@ import { getTodayDateOnly } from "../../../shared/utils/dateOnly";
 import { TransactionType } from "../types/transaction";
 
 export const transactionSchema = z.object({
-	personId: z
-		.string()
-		.min(1, "Selecione uma pessoa.")
-		.uuid("Selecione uma pessoa."),
+	personId: z.string().min(1, "Selecione uma pessoa."),
 	type: z.union(
 		[z.literal(TransactionType.Expense), z.literal(TransactionType.Revenue)],
 		{

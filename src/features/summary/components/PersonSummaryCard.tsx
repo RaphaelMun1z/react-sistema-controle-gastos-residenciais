@@ -59,7 +59,6 @@ const PersonSummaryCard = ({ person }: PersonSummaryCardProps) => {
 					</div>
 
 					<span className="summary-value expense-value">
-						<TrendingDownIcon className="summary-value__icon" />
 						{formatNegativeCurrency(person.totalExpense)}
 					</span>
 				</div>

@@ -3,17 +3,22 @@ import "./TransactionRegisterPage.scss";
 import {
 	Alert,
 	Autocomplete,
+	Avatar,
 	Button,
 	FormControl,
 	FormHelperText,
-	InputLabel,
-	MenuItem,
-	Select,
+	InputAdornment,
+	Radio,
+	RadioGroup,
 	Skeleton,
 	TextField,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
+import SearchIcon from "@mui/icons-material/Search";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import PageHeader from "../../../../shared/components/PageHeader/PageHeader";
 import { Link, useNavigate } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
@@ -25,7 +30,14 @@ import {
 } from "../../schemas/transactionSchema";
 import { useCreateTransaction } from "../../hooks/useTransactions";
 import { usePeopleSearch } from "../../../people/hooks/usePeople";
-import { useEffect, useMemo, useState } from "react";
+import {
+	useEffect,
+	useMemo,
+	useState,
+	type FocusEvent,
+	type MouseEvent,
+	type ReactNode,
+} from "react";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../../shared/components/DataState/EmptyState";
 import {
@@ -33,7 +45,10 @@ import {
 	getApiErrorTitle,
 	getValidationFieldErrors,
 } from "../../../../shared/api/apiError";
-import { TransactionType } from "../../types/transaction";
+import {
+	TransactionType,
+	type TransactionType as TransactionTypeValue,
+} from "../../types/transaction";
 import { transactionTypeOptions } from "../../utils/transactionLabels";
 import type { Person } from "../../../people/types/person";
 import { getTodayDateOnly } from "../../../../shared/utils/dateOnly";
@@ -47,11 +62,38 @@ const TransactionsRegisterHeaderData = {
 
 const peoplePageSize = 10;
 
+const getPersonInitial = (personName: string) =>
+	personName.trim().charAt(0).toUpperCase();
+
+const formatCurrencyInput = (value: number) =>
+	value > 0
+		? new Intl.NumberFormat("pt-BR", {
+				minimumFractionDigits: 2,
+				maximumFractionDigits: 2,
+			}).format(value)
+		: "";
+
+const parseCurrencyInput = (value: string) => {
+	const sanitizedValue = value.replace(/[^\d,.-]/g, "");
+	const hasDecimalSeparator = /[,.]\d{1,2}$/.test(sanitizedValue);
+	const normalizedValue = hasDecimalSeparator
+		? sanitizedValue.replace(/\./g, "").replace(",", ".")
+		: sanitizedValue.replace(/\D/g, "");
+	const parsedValue = Number(normalizedValue);
+
+	return Number.isFinite(parsedValue) ? parsedValue : 0;
+};
+
+const showDatePicker = (input: HTMLInputElement | null) => {
+	input?.showPicker?.();
+};
+
 const TransactionRegisterPage = () => {
 	const navigate = useNavigate();
 	const createTransaction = useCreateTransaction();
 	const [personSearch, setPersonSearch] = useState("");
 	const [debouncedPersonSearch, setDebouncedPersonSearch] = useState("");
+	const [amountText, setAmountText] = useState("");
 	const {
 		data: peopleData,
 		error: peopleError,
@@ -98,6 +140,10 @@ const TransactionRegisterPage = () => {
 	);
 	const isPeopleInitialLoading = isPeopleLoading && peopleOptions.length === 0;
 	const isPeopleBlockingError = isPeopleError && peopleOptions.length === 0;
+	const transactionTypeIcons: Record<TransactionTypeValue, ReactNode> = {
+		[TransactionType.Expense]: <TrendingDownIcon />,
+		[TransactionType.Revenue]: <TrendingUpIcon />,
+	};
 
 	useEffect(() => {
 		const timeout = globalThis.setTimeout(() => {
@@ -188,6 +234,7 @@ const TransactionRegisterPage = () => {
 							<div className="transaction-form__grid">
 								{isPeopleInitialLoading ? (
 									<Skeleton
+										className="transaction-form__field transaction-form__field--person"
 										animation="wave"
 										variant="rounded"
 										height={56}
@@ -199,10 +246,13 @@ const TransactionRegisterPage = () => {
 										control={control}
 										render={({ field, fieldState }) => (
 											<Autocomplete<Person>
+												className="person-autocomplete transaction-form__field transaction-form__field--person"
 												options={peopleOptions}
 												value={selectedPerson}
 												inputValue={personSearch}
 												loading={isPeopleFetching}
+												loadingText="Buscando pessoas..."
+												noOptionsText="Nenhuma pessoa encontrada"
 												getOptionLabel={(person) => person.name}
 												isOptionEqualToValue={(option, value) =>
 													option.id === value.id
@@ -211,16 +261,74 @@ const TransactionRegisterPage = () => {
 													setPersonSearch(value)
 												}
 												onChange={(_event, person) => {
-													field.onChange(person?.id ?? "");
+													setValue("personId", person?.id ?? "", {
+														shouldDirty: true,
+														shouldTouch: true,
+														shouldValidate: true,
+													});
+												}}
+												renderOption={(props, person) => {
+													const { key, className, ...optionProps } = props;
+
+													return (
+														<li
+															key={key}
+															{...optionProps}
+															aria-label={person.name}
+															className={`${className ?? ""} person-autocomplete__option`}
+														>
+															<Avatar className="person-autocomplete__avatar">
+																{getPersonInitial(person.name)}
+															</Avatar>
+															<span className="person-autocomplete__option-content">
+																<strong>{person.name}</strong>
+																<small>
+																	{person.age} anos
+																	{person.age < 18 ? " - menor de idade" : ""}
+																</small>
+															</span>
+														</li>
+													);
 												}}
 												renderInput={(params) => (
 													<TextField
 														{...params}
 														label="Pessoa"
+														placeholder="Busque pelo nome da pessoa"
 														inputRef={field.ref}
 														onBlur={field.onBlur}
 														error={Boolean(fieldState.error)}
-														helperText={fieldState.error?.message}
+														helperText={
+															fieldState.error?.message ??
+															"Digite para pesquisar e selecione uma pessoa"
+														}
+														slotProps={{
+															...params.slotProps,
+															input: {
+																...params.slotProps.input,
+																startAdornment: (
+																	<>
+																		<InputAdornment position="start">
+																			{selectedPerson ? (
+																				<Avatar className="person-autocomplete__input-avatar">
+																					{getPersonInitial(selectedPerson.name)}
+																				</Avatar>
+																			) : (
+																				<SearchIcon fontSize="small" />
+																			)}
+																		</InputAdornment>
+																		{params.slotProps.input.startAdornment}
+																	</>
+																),
+															},
+															htmlInput: {
+																...params.slotProps.htmlInput,
+																onBlur: (event: FocusEvent<HTMLInputElement>) => {
+																	params.slotProps.htmlInput.onBlur?.(event);
+																	field.onBlur();
+																},
+															},
+														}}
 													/>
 												)}
 											/>
@@ -228,27 +336,51 @@ const TransactionRegisterPage = () => {
 									/>
 								)}
 
-								<FormControl fullWidth error={Boolean(errors.type)}>
-									<InputLabel id="type-label">Tipo</InputLabel>
+								<FormControl
+									fullWidth
+									error={Boolean(errors.type)}
+									className="transaction-type-control transaction-form__field transaction-form__field--type"
+								>
+									<span className="transaction-type-control__label">Tipo</span>
 
 									<Controller
 										name="type"
 										control={control}
 										render={({ field }) => (
-											<Select {...field} labelId="type-label" label="Tipo">
-												{transactionTypeOptions.map((option) => (
-													<MenuItem
-														key={option.value}
-														value={option.value}
-														disabled={
-															option.value === TransactionType.Revenue &&
-															isSelectedPersonUnderAge
-														}
-													>
-														{option.label}
-													</MenuItem>
-												))}
-											</Select>
+											<RadioGroup
+												className="transaction-type-options"
+												value={String(field.value)}
+												onChange={(event) =>
+													field.onChange(Number(event.target.value))
+												}
+											>
+												{transactionTypeOptions.map((option) => {
+													const isDisabled =
+														option.value === TransactionType.Revenue &&
+														isSelectedPersonUnderAge;
+
+													return (
+														<label
+															key={option.value}
+															className={`transaction-type-option ${
+																field.value === option.value ? "is-selected" : ""
+															} ${isDisabled ? "is-disabled" : ""}`.trim()}
+														>
+															<Radio
+																value={String(option.value)}
+																disabled={isDisabled}
+																slotProps={{
+																	input: { "aria-label": option.label },
+																}}
+															/>
+															<span className="transaction-type-option__icon">
+																{transactionTypeIcons[option.value]}
+															</span>
+															<span>{option.label}</span>
+														</label>
+													);
+												})}
+											</RadioGroup>
 										)}
 									/>
 									<FormHelperText>
@@ -262,30 +394,71 @@ const TransactionRegisterPage = () => {
 									label="Descrição"
 									placeholder="Ex.: Conta de energia"
 									fullWidth
+									className="transaction-form__field transaction-form__field--description"
 									{...register("description")}
 									error={Boolean(errors.description)}
 									helperText={errors.description?.message}
 								/>
 
-								<TextField
-									label="Valor"
-									type="number"
-									fullWidth
-									{...register("amount", { valueAsNumber: true })}
-									error={Boolean(errors.amount)}
-									helperText={errors.amount?.message}
+								<Controller
+									name="amount"
+									control={control}
+									render={({ field, fieldState }) => (
+										<TextField
+											label="Valor"
+											placeholder="0,00"
+											fullWidth
+											className="transaction-form__field transaction-form__field--amount"
+											value={amountText}
+											onBlur={() => {
+												field.onBlur();
+												setAmountText(formatCurrencyInput(field.value));
+											}}
+											onChange={(event) => {
+												const nextText = event.target.value;
+												const nextValue = parseCurrencyInput(nextText);
+
+												setAmountText(nextText);
+												field.onChange(nextValue);
+											}}
+											error={Boolean(fieldState.error)}
+											helperText={fieldState.error?.message}
+											slotProps={{
+												input: {
+													startAdornment: (
+														<InputAdornment position="start">R$</InputAdornment>
+													),
+												},
+												htmlInput: {
+													inputMode: "decimal",
+												},
+											}}
+										/>
+									)}
 								/>
 
 								<TextField
 									label="Data da transação"
 									type="date"
 									fullWidth
+									className="transaction-form__field transaction-form__field--date"
 									{...register("transactionDate")}
 									error={Boolean(errors.transactionDate)}
 									helperText={errors.transactionDate?.message}
 									slotProps={{
+										input: {
+											startAdornment: (
+												<InputAdornment position="start">
+													<CalendarTodayOutlinedIcon fontSize="small" />
+												</InputAdornment>
+											),
+										},
 										htmlInput: {
 											max: getTodayDateOnly(),
+											onClick: (event: MouseEvent<HTMLInputElement>) =>
+												showDatePicker(event.currentTarget),
+											onFocus: (event: FocusEvent<HTMLInputElement>) =>
+												showDatePicker(event.currentTarget),
 										},
 										inputLabel: {
 											shrink: true,
