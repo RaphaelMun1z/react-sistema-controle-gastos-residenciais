@@ -3,17 +3,15 @@ import { deepOrange } from "@mui/material/colors";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import type { PersonSummary } from "../types/summary";
+import type { PersonFinancialSummary } from "../types/summary";
 import { formatCurrency, formatNegativeCurrency } from "../utils/currency";
 import SignedAmount from "./SignedAmount";
 
 interface PersonSummaryCardProps {
-	person: PersonSummary;
+	person: PersonFinancialSummary;
 }
 
 const PersonSummaryCard = ({ person }: PersonSummaryCardProps) => {
-	const balance = person.income - person.expenses;
-
 	return (
 		<article className="person-summary">
 			<header className="person-summary-header">
@@ -25,9 +23,9 @@ const PersonSummaryCard = ({ person }: PersonSummaryCardProps) => {
 						fontSize: "0.75rem",
 					}}
 				>
-					{person.personName.charAt(0)}
+					{person.name.charAt(0)}
 				</Avatar>
-				<h2>{person.personName}</h2>
+				<h2>{person.name}</h2>
 			</header>
 
 			<div className="summary-items">
@@ -44,7 +42,7 @@ const PersonSummaryCard = ({ person }: PersonSummaryCardProps) => {
 					</div>
 
 					<span className="summary-value income-value">
-						{formatCurrency(person.income)}
+						{formatCurrency(person.totalRevenue)}
 					</span>
 				</div>
 
@@ -62,7 +60,7 @@ const PersonSummaryCard = ({ person }: PersonSummaryCardProps) => {
 
 					<span className="summary-value expense-value">
 						<TrendingDownIcon className="summary-value__icon" />
-						{formatNegativeCurrency(person.expenses)}
+						{formatNegativeCurrency(person.totalExpense)}
 					</span>
 				</div>
 
@@ -78,9 +76,9 @@ const PersonSummaryCard = ({ person }: PersonSummaryCardProps) => {
 					</div>
 
 					<SignedAmount
-						value={balance}
+						value={person.balance}
 						className={`summary-value ${
-							balance >= 0 ? "positive-balance" : "negative-balance"
+							person.balance >= 0 ? "positive-balance" : "negative-balance"
 						}`}
 					/>
 				</div>

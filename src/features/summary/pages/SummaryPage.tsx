@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Pagination } from "@mui/material";
 import "./SummaryPage.scss";
 
 import PageHeader from "../../../shared/components/PageHeader/PageHeader";
@@ -7,7 +8,6 @@ import SummaryFilters from "../components/SummaryFilters";
 import PersonSummaryCard from "../components/PersonSummaryCard";
 import OverviewPanel from "../components/OverviewPanel";
 import { useSummary } from "../hooks/useSummary";
-import { useAllPeople } from "../../people/hooks/usePeople";
 import type { SummaryFilters as SummaryFiltersValue } from "../types/summary";
 import ErrorState from "../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../shared/components/DataState/EmptyState";
@@ -23,25 +23,38 @@ const SummaryHeaderData = {
 };
 
 const initialFilters: SummaryFiltersValue = {
-	personId: "all",
+	page: 1,
+	pageSize: 10,
 	startDate: "",
 	endDate: "",
 };
 
+const getDateFilterError = (filters: SummaryFiltersValue) =>
+	filters.startDate && filters.endDate && filters.startDate > filters.endDate
+		? "A data inicial não pode ser posterior à data final."
+		: "";
+
 const SummaryPage = () => {
 	const [filters, setFilters] = useState(initialFilters);
-	const { data: people = [] } = useAllPeople();
+	const filterError = getDateFilterError(filters);
 	const {
-		data: summary = [],
+		data: summary,
 		error,
 		refetch,
 		isLoading,
 		isFetching,
 		isError,
-	} = useSummary(filters);
+	} = useSummary(filters, !filterError);
 	const errorFeedback = getApiErrorFeedback(error, "summaryLoad");
+	const people = summary?.people.content ?? [];
+	const shouldShowInitialSkeleton = isLoading && !summary;
 
-	const shouldShowInitialSkeleton = isLoading && summary.length === 0;
+	useEffect(() => {
+		if (filterError) {
+			return;
+		}
+	}, [filterError]);
+
 	return (
 		<section className="summary-page">
 			<PageHeader data={SummaryHeaderData} />
@@ -52,12 +65,12 @@ const SummaryPage = () => {
 				<>
 					<SummaryFilters
 						filters={filters}
-						people={people}
+						error={filterError}
 						onChange={setFilters}
 						onClear={() => setFilters(initialFilters)}
 					/>
 
-					{isFetching && summary.length > 0 && (
+					{isFetching && people.length > 0 && (
 						<span className="summary-page__fetching" role="status">
 							Atualizando dados...
 						</span>
@@ -75,24 +88,40 @@ const SummaryPage = () => {
 									/>
 								)}
 
-								{!isLoading && !isError && summary.length === 0 && (
+								{!isLoading && !isError && people.length === 0 && (
 									<EmptyState
-										title="Ainda não há dados suficientes para gerar o resumo financeiro."
-										description="Cadastre pessoas e transações para visualizar receitas, despesas e saldo."
+										title="Nenhum dado financeiro encontrado para o período selecionado."
+										description="Ajuste o período ou registre novas transações para visualizar o resumo."
 										image={walletImage}
 										imageAlt="Carteira vazia"
 									/>
 								)}
 
 								{!isError &&
-									summary.map((person) => (
+									people.map((person) => (
 										<PersonSummaryCard key={person.personId} person={person} />
 									))}
+
+								{!isError && (summary?.people.totalPages ?? 0) > 1 && (
+									<Pagination
+										className="summary-page__pagination"
+										page={filters.page}
+										count={summary?.people.totalPages ?? 1}
+										onChange={(_event, page) =>
+											setFilters((current) => ({ ...current, page }))
+										}
+										color="primary"
+									/>
+								)}
 							</div>
 						</div>
 
 						<aside className="summary-aside">
-							<OverviewPanel summary={summary} />
+							<OverviewPanel
+								totalRevenue={summary?.totalRevenue ?? 0}
+								totalExpense={summary?.totalExpense ?? 0}
+								balance={summary?.balance ?? 0}
+							/>
 						</aside>
 					</div>
 				</>

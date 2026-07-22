@@ -1,26 +1,18 @@
-import {
-	Button,
-	FormControl,
-	InputLabel,
-	MenuItem,
-	Select,
-	TextField,
-} from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import type { Person } from "../../people/types/person";
 import type { SummaryFilters as SummaryFiltersValue } from "../types/summary";
 
 interface SummaryFiltersProps {
 	filters: SummaryFiltersValue;
-	people: Person[];
+	error?: string;
 	onChange: (filters: SummaryFiltersValue) => void;
 	onClear: () => void;
 }
 
 const SummaryFilters = ({
 	filters,
-	people,
+	error,
 	onChange,
 	onClear,
 }: SummaryFiltersProps) => {
@@ -35,36 +27,19 @@ const SummaryFilters = ({
 			</div>
 
 			<div className="filters-fields">
-				<FormControl size="small">
-					<InputLabel id="person-filter-label">Pessoa</InputLabel>
-
-					<Select
-						labelId="person-filter-label"
-						label="Pessoa"
-						value={filters.personId}
-						onChange={(event) =>
-							onChange({ ...filters, personId: event.target.value })
-						}
-					>
-						<MenuItem value="all">Todas as pessoas</MenuItem>
-
-						{people.map((person) => (
-							<MenuItem key={person.id} value={String(person.id)}>
-								{person.name}
-							</MenuItem>
-						))}
-					</Select>
-				</FormControl>
-
 				<TextField
 					label="Data inicial"
 					type="date"
 					size="small"
 					value={filters.startDate}
-					disabled
-					helperText="Filtro indisponível no contrato atual"
+					error={Boolean(error)}
+					helperText={error}
 					onChange={(event) =>
-						onChange({ ...filters, startDate: event.target.value })
+						onChange({
+							...filters,
+							page: 1,
+							startDate: event.target.value,
+						})
 					}
 					slotProps={{
 						inputLabel: {
@@ -78,10 +53,13 @@ const SummaryFilters = ({
 					type="date"
 					size="small"
 					value={filters.endDate}
-					disabled
-					helperText="Filtro indisponível no contrato atual"
+					error={Boolean(error)}
 					onChange={(event) =>
-						onChange({ ...filters, endDate: event.target.value })
+						onChange({
+							...filters,
+							page: 1,
+							endDate: event.target.value,
+						})
 					}
 					slotProps={{
 						inputLabel: {

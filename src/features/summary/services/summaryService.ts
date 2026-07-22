@@ -1,44 +1,22 @@
-import { peopleService } from "../../people/services/peopleService";
-import { transactionsService } from "../../transactions/services/transactionsService";
-import { TransactionType } from "../../transactions/types/transaction";
-import type { PersonSummary, SummaryFilters } from "../types/summary";
+import { API_ENDPOINTS } from "../../../shared/api/apiEndpoints";
+import { httpClient } from "../../../shared/api/httpClient";
+import type {
+	FinancialSummaryResponse,
+	SummaryFilters,
+} from "../types/summary";
 
 export const summaryService = {
-	async getSummary(filters: SummaryFilters): Promise<PersonSummary[]> {
-		// Excecao intencional: o backend ainda nao oferece endpoint agregado para o resumo.
-		// Listagens seguem paginacao sob demanda; aqui precisamos dos dados completos para calcular totais.
-		const [people, transactions] = await Promise.all([
-			peopleService.getAllPeople(),
-			transactionsService.getAllTransactions(),
-		]);
-		const peopleById = new Map(people.map((person) => [person.id, person]));
-		const summariesByPerson = new Map<string, PersonSummary>();
-
-		for (const transaction of transactions) {
-			if (
-				filters.personId !== "all" &&
-				transaction.personId !== filters.personId
-			) {
-				continue;
-			}
-
-			const person = peopleById.get(transaction.personId);
-			const summary = summariesByPerson.get(transaction.personId) ?? {
-				personId: transaction.personId,
-				personName: person?.name ?? transaction.personId,
-				income: 0,
-				expenses: 0,
-			};
-
-			if (transaction.type === TransactionType.Revenue) {
-				summary.income += transaction.amount;
-			} else {
-				summary.expenses += transaction.amount;
-			}
-
-			summariesByPerson.set(transaction.personId, summary);
-		}
-
-		return Array.from(summariesByPerson.values());
+	async getSummary(filters: SummaryFilters): Promise<FinancialSummaryResponse> {
+		return httpClient.get<FinancialSummaryResponse>(
+			API_ENDPOINTS.financialSummary,
+			{
+				params: {
+					page: filters.page,
+					pageSize: filters.pageSize,
+					startDate: filters.startDate || undefined,
+					endDate: filters.endDate || undefined,
+				},
+			},
+		);
 	},
 };
