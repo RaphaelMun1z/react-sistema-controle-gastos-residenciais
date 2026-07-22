@@ -2,9 +2,10 @@ import "./TransactionRegisterPage.scss";
 
 import {
 	Alert,
+	Autocomplete,
 	Button,
-	FormHelperText,
 	FormControl,
+	FormHelperText,
 	InputLabel,
 	MenuItem,
 	Select,
@@ -18,25 +19,24 @@ import { Link, useNavigate } from "react-router";
 import { ROUTES } from "../../../../app/routes/paths";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import {
 	transactionSchema,
 	type TransactionFormData,
 } from "../../schemas/transactionSchema";
 import { useCreateTransaction } from "../../hooks/useTransactions";
-import { peopleQueryKey, usePeople } from "../../../people/hooks/usePeople";
-import { useMemo, useState } from "react";
-import { useEffect } from "react";
+import { usePeopleSearch } from "../../../people/hooks/usePeople";
+import { useEffect, useMemo, useState } from "react";
 import ErrorState from "../../../../shared/components/DataState/ErrorState";
 import EmptyState from "../../../../shared/components/DataState/EmptyState";
 import {
 	getApiErrorFeedback,
 	getApiErrorTitle,
+	getValidationFieldErrors,
 } from "../../../../shared/api/apiError";
 import { TransactionType } from "../../types/transaction";
 import { transactionTypeOptions } from "../../utils/transactionLabels";
 import type { Person } from "../../../people/types/person";
-import type { PagedResponse } from "../../../../shared/api/apiTypes";
+import { getTodayDateOnly } from "../../../../shared/utils/dateOnly";
 
 const TransactionsRegisterHeaderData = {
 	sector: "Transações",
@@ -45,12 +45,13 @@ const TransactionsRegisterHeaderData = {
 	title: "Registrar Transação",
 };
 
+const peoplePageSize = 10;
+
 const TransactionRegisterPage = () => {
 	const navigate = useNavigate();
 	const createTransaction = useCreateTransaction();
-	const queryClient = useQueryClient();
-	const [peoplePage, setPeoplePage] = useState(1);
-	const peoplePageSize = 10;
+	const [personSearch, setPersonSearch] = useState("");
+	const [debouncedPersonSearch, setDebouncedPersonSearch] = useState("");
 	const {
 		data: peopleData,
 		error: peopleError,
@@ -58,7 +59,11 @@ const TransactionRegisterPage = () => {
 		isLoading: isPeopleLoading,
 		isFetching: isPeopleFetching,
 		refetch: refetchPeople,
-	} = usePeople({ page: peoplePage, pageSize: peoplePageSize });
+	} = usePeopleSearch({
+		page: 1,
+		pageSize: peoplePageSize,
+		search: debouncedPersonSearch,
+	});
 	const peopleErrorFeedback = getApiErrorFeedback(
 		peopleError,
 		"peopleOptionsLoad",
@@ -68,6 +73,7 @@ const TransactionRegisterPage = () => {
 		control,
 		register,
 		handleSubmit,
+		setError,
 		setValue,
 		formState: { errors, isSubmitting },
 	} = useForm<TransactionFormData>({
@@ -77,41 +83,31 @@ const TransactionRegisterPage = () => {
 			type: TransactionType.Expense,
 			description: "",
 			amount: 0,
+			transactionDate: getTodayDateOnly(),
 		},
 	});
-	const peopleOptions = useMemo(() => {
-		const peopleById = new Map<string, Person>();
-		const cachedPeoplePages = queryClient.getQueriesData<PagedResponse<Person>>(
-			{
-				queryKey: peopleQueryKey,
-			},
-		);
-
-		cachedPeoplePages.forEach(([, page]) => {
-			page?.content?.forEach((person) => {
-				peopleById.set(person.id, person);
-			});
-		});
-		peopleData?.content.forEach((person) => {
-			peopleById.set(person.id, person);
-		});
-
-		return Array.from(peopleById.values());
-	}, [peopleData, queryClient]);
+	const peopleOptions = useMemo(() => peopleData?.content ?? [], [peopleData]);
 	const selectedPersonId = useWatch({ control, name: "personId" });
 	const selectedType = useWatch({ control, name: "type" });
-	const selectedPerson = peopleOptions.find(
-		(person) => person.id === selectedPersonId,
+	const selectedPerson = useMemo(
+		() => peopleOptions.find((person) => person.id === selectedPersonId) ?? null,
+		[peopleOptions, selectedPersonId],
 	);
 	const isSelectedPersonUnderAge = Boolean(
 		selectedPerson && selectedPerson.age < 18,
 	);
 	const isPeopleInitialLoading = isPeopleLoading && peopleOptions.length === 0;
 	const isPeopleBlockingError = isPeopleError && peopleOptions.length === 0;
-	const hasMorePeople = peoplePage < (peopleData?.totalPages ?? 0);
 
 	useEffect(() => {
-		// A API também deve validar, mas o formulário já protege a UX contra receitas para menores.
+		const timeout = globalThis.setTimeout(() => {
+			setDebouncedPersonSearch(personSearch.trim());
+		}, 350);
+
+		return () => globalThis.clearTimeout(timeout);
+	}, [personSearch]);
+
+	useEffect(() => {
 		if (isSelectedPersonUnderAge && selectedType === TransactionType.Revenue) {
 			setValue("type", TransactionType.Expense, {
 				shouldDirty: true,
@@ -124,17 +120,14 @@ const TransactionRegisterPage = () => {
 	const onSubmit = async (data: TransactionFormData) => {
 		try {
 			setSubmitError("");
-			const person = peopleOptions.find(
-				(person) => person.id === data.personId,
-			);
 
 			if (
-				person?.age !== undefined &&
-				person.age < 18 &&
+				selectedPerson?.age !== undefined &&
+				selectedPerson.age < 18 &&
 				data.type === TransactionType.Revenue
 			) {
 				setSubmitError(
-					"Pessoas menores de 18 anos só podem ter despesas cadastradas.",
+					"Pessoas menores de 18 anos podem registrar apenas despesas.",
 				);
 				return;
 			}
@@ -142,6 +135,18 @@ const TransactionRegisterPage = () => {
 			await createTransaction.mutateAsync(data);
 			navigate(ROUTES.transactions);
 		} catch (error) {
+			const fieldErrors = getValidationFieldErrors(error);
+			Object.entries(fieldErrors).forEach(([field, message]) => {
+				if (
+					field === "personId" ||
+					field === "type" ||
+					field === "description" ||
+					field === "amount" ||
+					field === "transactionDate"
+				) {
+					setError(field, { message });
+				}
+			});
 			setSubmitError(getApiErrorTitle(error, "transactionsCreate"));
 		}
 	};
@@ -164,8 +169,8 @@ const TransactionRegisterPage = () => {
 					<>
 						{!isPeopleInitialLoading && peopleOptions.length === 0 && (
 							<EmptyState
-								title="Nenhuma pessoa cadastrada ainda."
-								description="Cadastre uma pessoa antes de registrar transações."
+								title="Nenhuma pessoa encontrada."
+								description="Cadastre uma pessoa ou ajuste a busca antes de registrar transações."
 							/>
 						)}
 
@@ -176,7 +181,7 @@ const TransactionRegisterPage = () => {
 							{submitError && <Alert severity="error">{submitError}</Alert>}
 							{isPeopleError && peopleOptions.length > 0 && (
 								<Alert severity="warning">
-									Nao foi possivel carregar mais pessoas agora.
+									Não foi possível carregar pessoas agora.
 								</Alert>
 							)}
 
@@ -193,27 +198,32 @@ const TransactionRegisterPage = () => {
 										name="personId"
 										control={control}
 										render={({ field, fieldState }) => (
-											<TextField
-												select
-												fullWidth
-												label="Pessoa"
-												value={field.value ?? ""}
-												onChange={(event) => field.onChange(event.target.value)}
-												onBlur={field.onBlur}
-												inputRef={field.ref}
-												error={Boolean(fieldState.error)}
-												helperText={fieldState.error?.message}
-											>
-												<MenuItem value="">
-													<em>Selecione uma pessoa</em>
-												</MenuItem>
-
-												{peopleOptions.map((person) => (
-													<MenuItem key={person.id} value={person.id}>
-														{person.name}
-													</MenuItem>
-												))}
-											</TextField>
+											<Autocomplete<Person>
+												options={peopleOptions}
+												value={selectedPerson}
+												inputValue={personSearch}
+												loading={isPeopleFetching}
+												getOptionLabel={(person) => person.name}
+												isOptionEqualToValue={(option, value) =>
+													option.id === value.id
+												}
+												onInputChange={(_event, value) =>
+													setPersonSearch(value)
+												}
+												onChange={(_event, person) => {
+													field.onChange(person?.id ?? "");
+												}}
+												renderInput={(params) => (
+													<TextField
+														{...params}
+														label="Pessoa"
+														inputRef={field.ref}
+														onBlur={field.onBlur}
+														error={Boolean(fieldState.error)}
+														helperText={fieldState.error?.message}
+													/>
+												)}
+											/>
 										)}
 									/>
 								)}
@@ -243,7 +253,7 @@ const TransactionRegisterPage = () => {
 									/>
 									<FormHelperText>
 										{isSelectedPersonUnderAge
-											? "Pessoas menores de 18 anos só podem ter despesas cadastradas."
+											? "Pessoas menores de 18 anos podem registrar apenas despesas."
 											: errors.type?.message}
 									</FormHelperText>
 								</FormControl>
@@ -265,22 +275,24 @@ const TransactionRegisterPage = () => {
 									error={Boolean(errors.amount)}
 									helperText={errors.amount?.message}
 								/>
-							</div>
 
-							{hasMorePeople && (
-								<Button
-									type="button"
-									variant="text"
-									onClick={() =>
-										setPeoplePage((currentPage) => currentPage + 1)
-									}
-									disabled={isPeopleFetching}
-								>
-									{isPeopleFetching
-										? "Carregando pessoas..."
-										: "Carregar mais pessoas"}
-								</Button>
-							)}
+								<TextField
+									label="Data da transação"
+									type="date"
+									fullWidth
+									{...register("transactionDate")}
+									error={Boolean(errors.transactionDate)}
+									helperText={errors.transactionDate?.message}
+									slotProps={{
+										htmlInput: {
+											max: getTodayDateOnly(),
+										},
+										inputLabel: {
+											shrink: true,
+										},
+									}}
+								/>
+							</div>
 
 							<div className="transaction-form__actions">
 								<Button
@@ -312,8 +324,7 @@ const TransactionRegisterPage = () => {
 										isSubmitting ||
 										createTransaction.isPending ||
 										isPeopleBlockingError ||
-										isPeopleInitialLoading ||
-										peopleOptions.length === 0
+										isPeopleInitialLoading
 									}
 									sx={{
 										backgroundColor: "#2e7d32",

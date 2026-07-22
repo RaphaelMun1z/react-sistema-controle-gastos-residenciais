@@ -12,6 +12,8 @@ export interface Transaction {
 	description: string;
 	type: TransactionType;
 	amount: number;
+	transactionDate: string;
+	createdAt: string;
 }
 
 export interface CreateTransactionInput {
@@ -19,4 +21,5 @@ export interface CreateTransactionInput {
 	type: TransactionType;
 	description: string;
 	amount: number;
+	transactionDate: string;
 }

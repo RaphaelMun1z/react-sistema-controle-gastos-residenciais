@@ -4,20 +4,29 @@ import type { PaginationParams } from "../../../shared/api/apiTypes";
 import type { CreatePersonInput } from "../types/person";
 
 export const peopleQueryKey = ["people"] as const;
-export const allPeopleQueryKey = ["people", "all"] as const;
+export const peopleSearchQueryKey = ["people-search"] as const;
 export const personQueryKey = (id: string) => ["people", id] as const;
 
 export const usePeople = (params: PaginationParams) =>
 	useQuery({
-		queryKey: [...peopleQueryKey, params.page, params.pageSize] as const,
+		queryKey: [
+			...peopleQueryKey,
+			params.page,
+			params.pageSize,
+			params.search ?? "",
+		] as const,
 		queryFn: () => peopleService.getPeople(params),
 		placeholderData: keepPreviousData,
+		staleTime: 60 * 1000,
 	});
 
-export const useAllPeople = () =>
+export const usePeopleSearch = (params: PaginationParams, enabled = true) =>
 	useQuery({
-		queryKey: allPeopleQueryKey,
-		queryFn: () => peopleService.getAllPeople(),
+		queryKey: [peopleSearchQueryKey[0], params] as const,
+		queryFn: () => peopleService.getPeople(params),
+		placeholderData: keepPreviousData,
+		staleTime: 60 * 1000,
+		enabled,
 	});
 
 export const usePerson = (id: string) =>
@@ -34,8 +43,8 @@ export const useCreatePerson = () => {
 		mutationFn: (input: CreatePersonInput) => peopleService.createPerson(input),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: peopleQueryKey });
-			void queryClient.invalidateQueries({ queryKey: allPeopleQueryKey });
-			void queryClient.invalidateQueries({ queryKey: ["summary"] });
+			void queryClient.invalidateQueries({ queryKey: peopleSearchQueryKey });
+			void queryClient.invalidateQueries({ queryKey: ["financial-summary"] });
 		},
 	});
 };
@@ -47,9 +56,9 @@ export const useDeletePerson = () => {
 		mutationFn: (id: string) => peopleService.deletePerson(id),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: peopleQueryKey });
-			void queryClient.invalidateQueries({ queryKey: allPeopleQueryKey });
+			void queryClient.invalidateQueries({ queryKey: peopleSearchQueryKey });
 			void queryClient.invalidateQueries({ queryKey: ["transactions"] });
-			void queryClient.invalidateQueries({ queryKey: ["summary"] });
+			void queryClient.invalidateQueries({ queryKey: ["financial-summary"] });
 		},
 	});
 };

@@ -19,6 +19,7 @@ import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 
 // React Router
 import { Link, useSearchParams } from "react-router";
@@ -35,6 +36,7 @@ import { peopleQueryKey } from "../../../people/hooks/usePeople";
 import type { Person } from "../../../people/types/person";
 import { formatCurrency } from "../../../summary/utils/currency";
 import type { PagedResponse } from "../../../../shared/api/apiTypes";
+import { formatDateOnly } from "../../../../shared/utils/dateOnly";
 
 const columnHeader = (icon: ReactNode, label: string) => (
 	<span className="table-column-header">
@@ -91,6 +93,15 @@ const columns: TableColumn<Transaction>[] = [
 			cellWithIcon(
 				<DescriptionOutlinedIcon fontSize="small" />,
 				transaction.description,
+			),
+	},
+	{
+		key: "transactionDate",
+		label: columnHeader(<CalendarTodayOutlinedIcon fontSize="small" />, "Data"),
+		render: (transaction) =>
+			cellWithIcon(
+				<CalendarTodayOutlinedIcon fontSize="small" />,
+				formatDateOnly(transaction.transactionDate),
 			),
 	},
 	{

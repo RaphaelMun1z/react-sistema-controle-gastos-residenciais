@@ -4,21 +4,16 @@ import { transactionsService } from "../services/transactionsService";
 import type { CreateTransactionInput } from "../types/transaction";
 
 export const transactionsQueryKey = ["transactions"] as const;
-export const allTransactionsQueryKey = ["transactions", "all"] as const;
 export const transactionQueryKey = (id: string) =>
 	["transactions", id] as const;
+export const transactionsByPersonQueryKey = ["transactions-person"] as const;
 
 export const useTransactions = (params: PaginationParams) =>
 	useQuery({
 		queryKey: [...transactionsQueryKey, params.page, params.pageSize] as const,
 		queryFn: () => transactionsService.getTransactions(params),
 		placeholderData: keepPreviousData,
-	});
-
-export const useAllTransactions = () =>
-	useQuery({
-		queryKey: allTransactionsQueryKey,
-		queryFn: () => transactionsService.getAllTransactions(),
+		staleTime: 60 * 1000,
 	});
 
 export const useTransaction = (id: string) =>
@@ -36,8 +31,10 @@ export const useCreateTransaction = () => {
 			transactionsService.createTransaction(input),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: transactionsQueryKey });
-			void queryClient.invalidateQueries({ queryKey: allTransactionsQueryKey });
-			void queryClient.invalidateQueries({ queryKey: ["summary"] });
+			void queryClient.invalidateQueries({
+				queryKey: transactionsByPersonQueryKey,
+			});
+			void queryClient.invalidateQueries({ queryKey: ["financial-summary"] });
 		},
 	});
 };

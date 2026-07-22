@@ -11,7 +11,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { personSchema, type PersonFormData } from "../../schemas/personSchema";
 import { useCreatePerson } from "../../hooks/usePeople";
 import { useState } from "react";
-import { getApiErrorTitle } from "../../../../shared/api/apiError";
+import {
+	getApiErrorTitle,
+	getValidationFieldErrors,
+} from "../../../../shared/api/apiError";
 
 const PersonRegisterHeaderData = {
 	sector: "Pessoas",
@@ -27,6 +30,7 @@ const PersonRegisterPage = () => {
 	const {
 		register,
 		handleSubmit,
+		setError,
 		formState: { errors, isSubmitting },
 	} = useForm<PersonFormData>({
 		resolver: zodResolver(personSchema),
@@ -44,6 +48,12 @@ const PersonRegisterPage = () => {
 				state: { feedbackMessage: "Pessoa cadastrada com sucesso." },
 			});
 		} catch (error) {
+			const fieldErrors = getValidationFieldErrors(error);
+			Object.entries(fieldErrors).forEach(([field, message]) => {
+				if (field === "name" || field === "birthDate") {
+					setError(field, { message });
+				}
+			});
 			setSubmitError(getApiErrorTitle(error, "peopleCreate"));
 		}
 	};

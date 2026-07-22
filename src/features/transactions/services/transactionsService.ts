@@ -11,8 +11,6 @@ import type {
 } from "../types/transactionDtos";
 import { mapTransactionResponseToTransaction } from "../types/transactionDtos";
 
-const DEFAULT_PAGE_SIZE_FOR_AGGREGATION = 100;
-
 export const transactionsService = {
 	async getTransactions(
 		params: PaginationParams,
@@ -41,24 +39,6 @@ export const transactionsService = {
 			...response,
 			content: response.content.map(mapTransactionResponseToTransaction),
 		};
-	},
-
-	async getAllTransactions(): Promise<Transaction[]> {
-		const firstPage = await this.getTransactions({
-			page: 1,
-			pageSize: DEFAULT_PAGE_SIZE_FOR_AGGREGATION,
-		});
-		const transactions = [...firstPage.content];
-
-		for (let page = 2; page <= firstPage.totalPages; page += 1) {
-			const nextPage = await this.getTransactions({
-				page,
-				pageSize: DEFAULT_PAGE_SIZE_FOR_AGGREGATION,
-			});
-			transactions.push(...nextPage.content);
-		}
-
-		return transactions;
 	},
 
 	async getTransactionById(id: string): Promise<Transaction> {

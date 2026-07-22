@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { getTodayDateOnly } from "../../../shared/utils/dateOnly";
 import { TransactionType } from "../types/transaction";
 
 export const transactionSchema = z.object({
@@ -15,6 +16,13 @@ export const transactionSchema = z.object({
 	),
 	description: z.string().min(1, "Informe uma descrição."),
 	amount: z.number().positive("Informe um valor maior que zero."),
+	transactionDate: z
+		.string()
+		.min(1, "Informe a data da transação.")
+		.refine(
+			(value) => value <= getTodayDateOnly(),
+			"A data da transação não pode ser futura.",
+		),
 });
 
 export type TransactionFormData = z.infer<typeof transactionSchema>;

@@ -8,7 +8,7 @@ import Table, {
 	type TableAction,
 	type TableColumn,
 } from "../../../../shared/components/Table/Table";
-import { Alert, Button, Pagination, Snackbar } from "@mui/material";
+import { Alert, Button, Pagination, Snackbar, TextField } from "@mui/material";
 import { PersonAdd } from "@mui/icons-material";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
@@ -23,6 +23,7 @@ import {
 } from "../../../../shared/api/apiError";
 import { useDeletePerson, usePeople } from "../../hooks/usePeople";
 import type { Person } from "../../types/person";
+import { formatDateOnly } from "../../../../shared/utils/dateOnly";
 
 interface PeopleConsultLocationState {
 	feedbackMessage?: string;
@@ -55,9 +56,7 @@ const columns: TableColumn<Person>[] = [
 		render: (person) =>
 			cellWithIcon(
 				<CakeOutlinedIcon fontSize="small" />,
-				new Intl.DateTimeFormat("pt-BR").format(
-					new Date(`${person.birthDate}T00:00:00`),
-				),
+				formatDateOnly(person.birthDate),
 			),
 	},
 	{
@@ -75,17 +74,27 @@ const PeopleConsultHeaderData = {
 	title: "Pessoas Registradas",
 };
 
+const buildPeopleSearchParams = (
+	page: number,
+	search: string,
+): Record<string, string> =>
+	search ? { page: String(page), search } : { page: String(page) };
+
 const PeopleConsultPage = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const requestedPage = Number(searchParams.get("page") ?? "1");
+	const search = searchParams.get("search") ?? "";
 	const page =
 		Number.isInteger(requestedPage) && requestedPage >= 1 ? requestedPage : 1;
 	const pageSize = 10;
+	const [searchText, setSearchText] = useState(search);
+	const [debouncedSearch, setDebouncedSearch] = useState(search);
 	const { data, error, isError, isLoading, isFetching, refetch } = usePeople({
 		page,
 		pageSize,
+		search: debouncedSearch,
 	});
 	const people = data?.content ?? [];
 	const errorFeedback = getApiErrorFeedback(error, "peopleList");
@@ -103,9 +112,28 @@ const PeopleConsultPage = () => {
 
 	useEffect(() => {
 		if (searchParams.get("page") && page !== requestedPage) {
-			setSearchParams({ page: "1" }, { replace: true });
+			setSearchParams(
+				buildPeopleSearchParams(1, debouncedSearch),
+				{ replace: true },
+			);
 		}
-	}, [page, requestedPage, searchParams, setSearchParams]);
+	}, [debouncedSearch, page, requestedPage, searchParams, setSearchParams]);
+
+	useEffect(() => {
+		const timeout = globalThis.setTimeout(() => {
+			setDebouncedSearch(searchText.trim());
+		}, 350);
+
+		return () => globalThis.clearTimeout(timeout);
+	}, [searchText]);
+
+	useEffect(() => {
+		if (debouncedSearch !== search) {
+			setSearchParams(buildPeopleSearchParams(1, debouncedSearch), {
+				replace: true,
+			});
+		}
+	}, [debouncedSearch, search, setSearchParams]);
 
 	const actions: TableAction<Person>[] = [
 		{
@@ -133,6 +161,13 @@ const PeopleConsultPage = () => {
 			<PageHeader data={PeopleConsultHeaderData} />
 
 			<div className="people-consult-page__create">
+				<TextField
+					label="Buscar pessoa"
+					size="small"
+					value={searchText}
+					onChange={(event) => setSearchText(event.target.value)}
+				/>
+
 				<Button
 					component={Link}
 					variant="outlined"
@@ -184,7 +219,9 @@ const PeopleConsultPage = () => {
 								page={page}
 								count={data?.totalPages ?? 1}
 								onChange={(_event, nextPage) =>
-									setSearchParams({ page: String(nextPage) })
+									setSearchParams(
+										buildPeopleSearchParams(nextPage, debouncedSearch),
+									)
 								}
 								color="primary"
 							/>

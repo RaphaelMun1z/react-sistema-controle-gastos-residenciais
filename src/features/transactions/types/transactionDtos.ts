@@ -10,6 +10,8 @@ export interface TransactionResponseDTO {
 	description: string;
 	type: number;
 	amount: number;
+	transactionDate: string;
+	createdAt: string;
 }
 
 export type CreateTransactionRequestDTO = CreateTransactionInput;
@@ -27,4 +29,6 @@ export const mapTransactionResponseToTransaction = (
 	description: transaction.description,
 	type: mapTransactionType(transaction.type),
 	amount: transaction.amount,
+	transactionDate: transaction.transactionDate,
+	createdAt: transaction.createdAt,
 });

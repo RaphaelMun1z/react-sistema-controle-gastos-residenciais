@@ -8,37 +8,23 @@ import type {
 } from "../types/personDtos";
 import { mapPersonResponseToPerson } from "../types/personDtos";
 
-const DEFAULT_PAGE_SIZE_FOR_OPTIONS = 100;
-
 export const peopleService = {
 	async getPeople(params: PaginationParams): Promise<PagedResponse<Person>> {
 		const response = await httpClient.get<PagedResponse<PersonResponseDTO>>(
 			API_ENDPOINTS.people,
-			{ params: { page: params.page, pageSize: params.pageSize } },
+			{
+				params: {
+					page: params.page,
+					pageSize: params.pageSize,
+					search: params.search,
+				},
+			},
 		);
 
 		return {
 			...response,
 			content: response.content.map(mapPersonResponseToPerson),
 		};
-	},
-
-	async getAllPeople(): Promise<Person[]> {
-		const firstPage = await this.getPeople({
-			page: 1,
-			pageSize: DEFAULT_PAGE_SIZE_FOR_OPTIONS,
-		});
-		const people = [...firstPage.content];
-
-		for (let page = 2; page <= firstPage.totalPages; page += 1) {
-			const nextPage = await this.getPeople({
-				page,
-				pageSize: DEFAULT_PAGE_SIZE_FOR_OPTIONS,
-			});
-			people.push(...nextPage.content);
-		}
-
-		return people;
 	},
 
 	async getPersonById(id: string): Promise<Person> {
