@@ -15,6 +15,7 @@ import {
 	ListItemButton,
 	ListItemIcon,
 	ListItemText,
+	Skeleton,
 	Tab,
 	Tabs,
 	useMediaQuery,
@@ -56,7 +57,7 @@ const Template = () => {
 	// Hooks responsáveis pela navegação e identificação da rota atual
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { signOut } = useAuth();
+	const { signOut, user, userError, isUserLoading, reloadUser } = useAuth();
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -89,20 +90,39 @@ const Template = () => {
 		}
 	};
 
+	const userInitial = user?.name.trim().charAt(0).toUpperCase() ?? "";
+
 	const sidebarContent = (
 		<div className="aside-content-container">
 			<header className="aside-header-container">
-				<Avatar
-					sx={{
-						width: 70,
-						height: 70,
-						bgcolor: deepOrange[500],
-					}}
-				>
-					U
-				</Avatar>
-				<h2>Usuário</h2>
-				<p>Sessão autenticada</p>
+				{isUserLoading ? (
+					<>
+						<Skeleton variant="circular" width={70} height={70} />
+						<Skeleton variant="text" width={150} height={28} />
+						<Skeleton variant="text" width={180} height={20} />
+					</>
+				) : userError ? (
+					<div className="aside-user-error">
+						<p>Não foi possível carregar os dados da conta.</p>
+						<button type="button" onClick={() => void reloadUser()}>
+							Tentar novamente
+						</button>
+					</div>
+				) : (
+					<>
+						<Avatar
+							sx={{
+								width: 70,
+								height: 70,
+								bgcolor: deepOrange[500],
+							}}
+						>
+							{userInitial}
+						</Avatar>
+						<h2>{user?.name}</h2>
+						<p>{user?.email}</p>
+					</>
+				)}
 			</header>
 			<nav className="navbar-container" aria-label="Navegação principal">
 				<div className="links-container">

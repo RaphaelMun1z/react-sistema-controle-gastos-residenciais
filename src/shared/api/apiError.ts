@@ -23,7 +23,6 @@ export type UiErrorContext =
 	| "transactionsList"
 	| "transactionsCreate"
 	| "summaryLoad"
-	| "financialAnalysis"
 	| "peopleOptionsLoad"
 	| "signIn"
 	| "signUp";
@@ -52,7 +51,6 @@ const contextTitles: Record<UiErrorContext, string> = {
 	transactionsList: "Não foi possível carregar suas transações.",
 	transactionsCreate: "Não foi possível registrar a transação.",
 	summaryLoad: "Não foi possível carregar seu resumo financeiro.",
-	financialAnalysis: "Não foi possível concluir a análise",
 	peopleOptionsLoad: "Não foi possível carregar as pessoas cadastradas.",
 	signIn: "Não foi possível entrar agora.",
 	signUp: "Não foi possível criar sua conta.",
@@ -134,6 +132,27 @@ export const createHttpError = (
 
 export const getApiErrorMessage = (error: unknown) =>
 	createApiError(error).message;
+
+export const getValidationFieldErrors = (error: unknown) => {
+	const apiError = createApiError(error);
+	const errors = apiError.problemDetails?.errors;
+
+	if (!errors || typeof errors !== "object" || Array.isArray(errors)) {
+		return {};
+	}
+
+	return Object.entries(errors).reduce<Record<string, string>>(
+		(fieldErrors, [field, messages]) => {
+			if (Array.isArray(messages) && typeof messages[0] === "string") {
+				fieldErrors[field.charAt(0).toLowerCase() + field.slice(1)] =
+					messages[0];
+			}
+
+			return fieldErrors;
+		},
+		{},
+	);
+};
 
 const getConflictMessage = (context: UiErrorContext) => {
 	if (context === "peopleCreate") {

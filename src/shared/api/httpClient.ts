@@ -108,7 +108,6 @@ const request = async <TResponse>(
 			`${buildUrl(path)}${buildQueryString(params)}`,
 			{
 				headers,
-				credentials: "include",
 				signal: controller.signal,
 				...requestInit,
 			},

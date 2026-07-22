@@ -3,8 +3,6 @@ export interface AuthUser {
 	personId: string;
 	name: string;
 	email: string;
-	birthDate: string;
-	age: number;
 }
 
 export interface SignInCredentials {

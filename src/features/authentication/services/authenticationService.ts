@@ -27,17 +27,21 @@ export const authenticationService = {
 		return mapSessionResponseToSession(session);
 	},
 
-	async signUp(data: SignUpData): Promise<AuthUser> {
+	async signUp(data: SignUpData): Promise<void> {
 		const request: SignUpRequestDTO = {
 			name: data.name,
 			birthDate: data.birthDate,
 			email: data.email,
 			password: data.password,
 		};
-		const user = await httpClient.post<
-			AuthUserResponseDTO,
-			SignUpRequestDTO
-		>(API_ENDPOINTS.auth.register, request);
+		await httpClient.post<unknown, SignUpRequestDTO>(
+			API_ENDPOINTS.auth.register,
+			request,
+		);
+	},
+
+	async getMe(): Promise<AuthUser> {
+		const user = await httpClient.get<AuthUserResponseDTO>(API_ENDPOINTS.auth.me);
 
 		return mapUserResponseToUser(user);
 	},

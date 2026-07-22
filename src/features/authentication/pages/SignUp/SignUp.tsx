@@ -22,7 +22,10 @@ import {
 } from "../../schemas/authSchemas";
 import { useAuth } from "../../hooks/useAuth";
 import { useState } from "react";
-import { getApiErrorTitle } from "../../../../shared/api/apiError";
+import {
+	getApiErrorTitle,
+	getValidationFieldErrors,
+} from "../../../../shared/api/apiError";
 
 const SignUp = () => {
 	const navigate = useNavigate();
@@ -31,6 +34,7 @@ const SignUp = () => {
 	const {
 		register,
 		handleSubmit,
+		setError,
 		formState: { errors, isSubmitting },
 	} = useForm<SignUpFormData>({
 		resolver: zodResolver(signUpSchema),
@@ -49,6 +53,17 @@ const SignUp = () => {
 			await signUp(data);
 			navigate(ROUTES.signIn);
 		} catch (error) {
+			const fieldErrors = getValidationFieldErrors(error);
+			Object.entries(fieldErrors).forEach(([field, message]) => {
+				if (
+					field === "name" ||
+					field === "birthDate" ||
+					field === "email" ||
+					field === "password"
+				) {
+					setError(field, { message });
+				}
+			});
 			setSubmitError(getApiErrorTitle(error, "signUp"));
 		}
 	};

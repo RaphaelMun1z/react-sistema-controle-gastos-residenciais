@@ -22,10 +22,12 @@ export interface ProblemDetails {
 	status?: number;
 	detail?: string;
 	instance?: string;
+	errors?: Record<string, string[]>;
 	[key: string]: unknown;
 }
 
 export interface PaginationParams {
 	page: number;
 	pageSize: number;
+	search?: string;
 }
