@@ -51,9 +51,8 @@ describe("TransactionRegisterPage", () => {
 		renderWithProviders(<TransactionRegisterPage />);
 
 		expect(
-			await screen.findByText("Nenhuma pessoa cadastrada ainda."),
+			await screen.findByText("Nenhuma pessoa encontrada."),
 		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: /salvar/i })).toBeDisabled();
 	});
 
 	it("corrige receita para despesa quando a pessoa selecionada e menor de idade", async () => {
@@ -63,13 +62,15 @@ describe("TransactionRegisterPage", () => {
 				type: number;
 				description: string;
 				amount: number;
+				transactionDate: string;
 			};
 
-			expect(body).toEqual({
+			expect(body).toMatchObject({
 				personId: underAgePersonId,
 				type: TransactionType.Expense,
 				description: "Mesada",
 				amount: 50,
+				transactionDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
 			});
 
 			return HttpResponse.json({
@@ -125,13 +126,15 @@ describe("TransactionRegisterPage", () => {
 				type: number;
 				description: string;
 				amount: number;
+				transactionDate: string;
 			};
 
-			expect(body).toEqual({
+			expect(body).toMatchObject({
 				personId: adultPersonId,
 				type: TransactionType.Expense,
 				description: "Aluguel",
 				amount: 1200,
+				transactionDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
 			});
 
 			return HttpResponse.json({
@@ -163,7 +166,7 @@ describe("TransactionRegisterPage", () => {
 			screen.getByRole("option", { name: "Maria Oliveira" }),
 		);
 
-		expect(screen.getByText("Maria Oliveira")).toBeInTheDocument();
+		expect(screen.getByDisplayValue("Maria Oliveira")).toBeInTheDocument();
 		await waitFor(() => {
 			expect(
 				screen.queryByText("Selecione uma pessoa."),

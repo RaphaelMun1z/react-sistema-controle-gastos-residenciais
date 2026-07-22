@@ -11,6 +11,7 @@ describe("transactionSchema", () => {
 			type: TransactionType.Expense,
 			description: "Energia",
 			amount: 120,
+			transactionDate: "2026-07-21",
 		});
 
 		expect(result.success).toBe(true);
@@ -22,6 +23,19 @@ describe("transactionSchema", () => {
 			type: TransactionType.Expense,
 			description: "Energia",
 			amount: -120,
+			transactionDate: "2026-07-21",
+		});
+
+		expect(result.success).toBe(false);
+	});
+
+	it("rejeita data futura", () => {
+		const result = transactionSchema.safeParse({
+			personId,
+			type: TransactionType.Expense,
+			description: "Energia",
+			amount: 120,
+			transactionDate: "2999-01-01",
 		});
 
 		expect(result.success).toBe(false);

@@ -71,53 +71,30 @@ test("abre e fecha navegação mobile pelo menu", async ({ page }, testInfo) => 
 	).not.toBeVisible();
 });
 
-test("mostra resumo derivado sem a ação de análise removida", async ({ page }, testInfo) => {
+test("mostra resumo agregado sem a ação de análise removida", async ({ page }, testInfo) => {
 	test.skip(!isBypassAuthEnabled || testInfo.project.name !== "desktop");
 
 	const personId = "11111111-1111-4111-8111-111111111111";
 
-	await page.route("**/api/v1/people**", async (route) => {
+	await page.route("**/api/v1/financial-summary**", async (route) => {
 		await route.fulfill({
 			json: {
-				content: [
-					{
-						id: personId,
+				totalRevenue: 10000,
+				totalExpense: 3500,
+				balance: 6500,
+				people: {
+					content: [{
+						personId,
 						name: "Raphael Muniz",
-						birthDate: "2001-07-18",
-						age: 25,
-					},
-				],
-				page: 1,
-				pageSize: 100,
-				totalElements: 1,
-				totalPages: 1,
-			},
-		});
-	});
-
-	await page.route("**/api/v1/transactions**", async (route) => {
-		await route.fulfill({
-			json: {
-				content: [
-					{
-						id: "22222222-2222-4222-8222-222222222222",
-						personId,
-						amount: 1500,
-						type: 1,
-						description: "Salário",
-					},
-					{
-						id: "33333333-3333-4333-8333-333333333333",
-						personId,
-						amount: 300,
-						type: 0,
-						description: "Mercado",
-					},
-				],
-				page: 1,
-				pageSize: 100,
-				totalElements: 2,
-				totalPages: 1,
+						totalRevenue: 1500,
+						totalExpense: 300,
+						balance: 1200,
+					}],
+					page: 1,
+					pageSize: 10,
+					totalElements: 1,
+					totalPages: 1,
+				},
 			},
 		});
 	});

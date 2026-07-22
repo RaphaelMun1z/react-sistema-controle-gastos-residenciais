@@ -16,6 +16,8 @@ const transaction = {
 	description: "Salario",
 	type: TransactionType.Revenue,
 	amount: 1500,
+	transactionDate: "2026-07-21",
+	createdAt: "2026-07-21T10:00:00Z",
 };
 
 const pagedTransactions = {
@@ -44,6 +46,7 @@ describe("TransactionsConsultPage", () => {
 		expect(await screen.findByText(personId)).toBeInTheDocument();
 		expect(screen.getByText("Salario")).toBeInTheDocument();
 		expect(screen.getByText("Receita")).toBeInTheDocument();
+		expect(screen.getByText("21/07/2026")).toBeInTheDocument();
 		expect(screen.getByText(/R\$\s*1.500,00/)).toBeInTheDocument();
 	});
 

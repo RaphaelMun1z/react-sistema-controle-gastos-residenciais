@@ -4,58 +4,39 @@ import { describe, expect, it } from "vitest";
 import { API_ENDPOINTS } from "../../../shared/api/apiEndpoints";
 import { renderWithProviders } from "../../../test/renderWithProviders";
 import { server } from "../../../test/server";
-import { TransactionType } from "../../transactions/types/transaction";
 import SummaryPage from "./SummaryPage";
 
 const personId = "11111111-1111-4111-8111-111111111111";
 
-const pagedPeople = {
-	content: [
-		{
-			id: personId,
-			name: "Raphael Muniz",
-			birthDate: "2001-07-18",
-			age: 25,
-		},
-	],
-	page: 1,
-	pageSize: 100,
-	totalElements: 1,
-	totalPages: 1,
-};
-
 const setupHandlers = () => {
 	server.use(
-		http.get(`*${API_ENDPOINTS.people}`, () => HttpResponse.json(pagedPeople)),
-		http.get(`*${API_ENDPOINTS.transactions}`, () =>
+		http.get(`*${API_ENDPOINTS.financialSummary}`, () =>
 			HttpResponse.json({
-				content: [
-					{
-						id: "22222222-2222-4222-8222-222222222222",
-						personId,
-						amount: 1500,
-						type: TransactionType.Revenue,
-						description: "Salário",
-					},
-					{
-						id: "33333333-3333-4333-8333-333333333333",
-						personId,
-						amount: 300,
-						type: TransactionType.Expense,
-						description: "Mercado",
-					},
-				],
-				page: 1,
-				pageSize: 100,
-				totalElements: 2,
-				totalPages: 1,
+				totalRevenue: 10000,
+				totalExpense: 3500,
+				balance: 6500,
+				people: {
+					content: [
+						{
+							personId,
+							name: "Raphael Muniz",
+							totalRevenue: 2000,
+							totalExpense: 300,
+							balance: 1700,
+						},
+					],
+					page: 1,
+					pageSize: 10,
+					totalElements: 1,
+					totalPages: 1,
+				},
 			}),
 		),
 	);
 };
 
 describe("SummaryPage", () => {
-	it("deriva resumo financeiro usando pessoas e todas as transações paginadas", async () => {
+	it("renderiza resumo financeiro usando o endpoint agregado", async () => {
 		setupHandlers();
 
 		renderWithProviders(<SummaryPage />);
@@ -63,7 +44,8 @@ describe("SummaryPage", () => {
 		expect(
 			await screen.findByRole("heading", { name: "Raphael Muniz" }),
 		).toBeInTheDocument();
-		expect(screen.getAllByText(/R\$\s*1.500,00/)[0]).toBeInTheDocument();
+		expect(screen.getByText(/R\$\s*10.000,00/)).toBeInTheDocument();
+		expect(screen.getAllByText(/R\$\s*2.000,00/)[0]).toBeInTheDocument();
 		expect(screen.getAllByText(/R\$\s*300,00/)[0]).toBeInTheDocument();
 	});
 
